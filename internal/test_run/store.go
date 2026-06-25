@@ -38,9 +38,10 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 			created_at,
 			completed_at,
 			status,
-			error
+			error,
+			report
 		)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 		id,
 		input.DeployBaseURL,
 		input.TelegramUsername,
@@ -52,6 +53,7 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 		createdAt,
 		nil,
 		status,
+		nil,
 		nil,
 	)
 	if err != nil {
@@ -69,6 +71,7 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 		createdAt,
 		nil,
 		status,
+		nil,
 		nil,
 	}, nil
 }
@@ -88,7 +91,8 @@ func (s *Store) FindByID(ctx context.Context, id uuid.UUID) (TestRun, error) {
 			created_at,
 			completed_at,
 			status,
-			error
+			error,
+			report
 		FROM "Test_runs" WHERE id = $1`,
 		id,
 	)
@@ -121,7 +125,8 @@ func (s *Store) List(ctx context.Context, filters Filters) ([]TestRun, error) {
 			created_at, 
 			completed_at, 
 			status, 
-			error
+			error,
+			report
 	        FROM "Test_runs"`
 
 	var conditions []string
@@ -183,4 +188,26 @@ func (s *Store) List(ctx context.Context, filters Filters) ([]TestRun, error) {
 	}
 
 	return runs, nil
+}
+
+func (s *Store) Update(ctx context.Context, id uuid.UUID, input UpdateInput) error {
+	_, err := s.db.Exec(
+		ctx,
+		`UPDATE "Test_runs"
+		SET
+			completed_at = $1,
+			status = $2,
+			error = $3,
+			report = $4
+		WHERE id = $5`,
+		input.CompletedAt,
+		input.Status,
+		input.Error,
+		input.Report,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("store.Update: %w", err)
+	}
+	return nil
 }
