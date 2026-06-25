@@ -2,6 +2,7 @@
 package testrun
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -24,18 +25,19 @@ const (
 )
 
 type TestRun struct {
-	ID               uuid.UUID     `db:"id" json:"id"`
-	DeployBaseURL    string        `db:"deploy_base_url" json:"deploy_base_url"`
-	TelegramUsername string        `db:"telegram_username" json:"telegram_username"`
-	TelegramUserID   int64         `db:"telegram_user_id" json:"telegram_user_id"`
-	GithubUsername   string        `db:"github_username" json:"github_username"`
-	GithubRepository string        `db:"github_repository" json:"github_repository"`
-	ProjectLanguage  string        `db:"project_language" json:"project_language"`
-	ProjectName      string        `db:"project_name" json:"project_name"`
-	CreatedAt        int64         `db:"created_at" json:"created_at"`
-	CompletedAt      *int64        `db:"completed_at" json:"completed_at"`
-	Status           TestRunStatus `db:"status" json:"status"`
-	Error            *string       `db:"error" json:"error"`
+	ID               uuid.UUID          `db:"id" json:"id"`
+	DeployBaseURL    string             `db:"deploy_base_url" json:"deploy_base_url"`
+	TelegramUsername string             `db:"telegram_username" json:"telegram_username"`
+	TelegramUserID   int64              `db:"telegram_user_id" json:"telegram_user_id"`
+	GithubUsername   string             `db:"github_username" json:"github_username"`
+	GithubRepository string             `db:"github_repository" json:"github_repository"`
+	ProjectLanguage  string             `db:"project_language" json:"project_language"`
+	ProjectName      TestRunProjectName `db:"project_name" json:"project_name"`
+	CreatedAt        int64              `db:"created_at" json:"created_at"`
+	CompletedAt      *int64             `db:"completed_at" json:"completed_at"`
+	Status           TestRunStatus      `db:"status" json:"status"`
+	Error            *string            `db:"error" json:"error"`
+	Report           *json.RawMessage   `db:"report" json:"report"`
 }
 
 type CreateInput struct {
@@ -47,6 +49,12 @@ type CreateInput struct {
 	ProjectLanguage  string             `json:"project_language"`
 	ProjectName      TestRunProjectName `json:"project_name"`
 }
+
+type UpdateInput struct {
+	CompletedAt *int64
+	Status      TestRunStatus
+	Error       *string
+	Report      *json.RawMessage
 }
 
 type Filters struct {
