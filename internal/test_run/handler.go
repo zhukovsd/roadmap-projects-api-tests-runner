@@ -27,6 +27,12 @@ func (h *Handler) Create(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if errs := input.Validate(); len(errs) > 0 {
+		logger.Error("Invalid create test run request", "errors", errors.Join(errs...), "input", input)
+		http.Error(resp, "Bad request", http.StatusBadRequest)
+		return
+	}
+
 	testRun, err := h.service.Create(req.Context(), input)
 
 	if err != nil {
@@ -94,12 +100,14 @@ func (h *Handler) List(resp http.ResponseWriter, req *http.Request) {
 	statusParam := emptyToNil(q.Get("status"))
 	var status *TestRunStatus
 	if statusParam != nil {
-		s, err := ParseTestRunStatus(*statusParam)
-		if err != nil {
+		s := TestRunStatus(*statusParam)
+
+		if err := s.Validate(); err != nil {
 			logger.Error("Failed to parse test run status", "error", err, "status", *statusParam)
 			http.Error(resp, "Bad request", http.StatusBadRequest)
 			return
 		}
+
 		status = &s
 	}
 
