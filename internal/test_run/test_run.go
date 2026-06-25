@@ -8,12 +8,19 @@ import (
 )
 
 type TestRunStatus string
+type TestRunProjectName string
 
 const (
 	StatusPending   TestRunStatus = "PENDING"
 	StatusRunning   TestRunStatus = "RUNNING"
 	StatusFailed    TestRunStatus = "FAILED"
 	StatusCompleted TestRunStatus = "COMPLETED"
+)
+
+const (
+	ProjectNameCurrencyExchange TestRunProjectName = "CURRENCY_EXCHANGE"
+	ProjectNameTennisScoreboard TestRunProjectName = "TENNIS_SCOREBOARD"
+	ProjectNameCloudFileStorage TestRunProjectName = "CLOUD_FILE_STORAGE"
 )
 
 type TestRun struct {
@@ -32,13 +39,14 @@ type TestRun struct {
 }
 
 type CreateInput struct {
-	DeployBaseURL    string `json:"deploy_base_url"`
-	TelegramUsername string `json:"telegram_username"`
-	TelegramUserID   int64  `json:"telegram_user_id"`
-	GithubUsername   string `json:"github_username"`
-	GithubRepository string `json:"github_repository"`
-	ProjectLanguage  string `json:"project_language"`
-	ProjectName      string `json:"project_name"`
+	DeployBaseURL    string             `json:"deploy_base_url"`
+	TelegramUsername string             `json:"telegram_username"`
+	TelegramUserID   int64              `json:"telegram_user_id"`
+	GithubUsername   string             `json:"github_username"`
+	GithubRepository string             `json:"github_repository"`
+	ProjectLanguage  string             `json:"project_language"`
+	ProjectName      TestRunProjectName `json:"project_name"`
+}
 }
 
 type Filters struct {
@@ -52,11 +60,51 @@ type Filters struct {
 	Status           *TestRunStatus
 }
 
-func ParseTestRunStatus(s string) (TestRunStatus, error) {
-	switch TestRunStatus(s) {
+func (i CreateInput) Validate() []error {
+	var errors []error
+
+	if i.DeployBaseURL == "" {
+		errors = append(errors, fmt.Errorf("missing \"deploy_base_url\": %w", ErrMissingField))
+	}
+	if i.TelegramUsername == "" {
+		errors = append(errors, fmt.Errorf("missing \"telegram_username\": %w", ErrMissingField))
+	}
+	if i.TelegramUserID == 0 {
+		errors = append(errors, fmt.Errorf("missing \"telegram_user_id\": %w", ErrMissingField))
+	}
+	if i.GithubUsername == "" {
+		errors = append(errors, fmt.Errorf("missing \"github_username\": %w", ErrMissingField))
+	}
+	if i.GithubRepository == "" {
+		errors = append(errors, fmt.Errorf("missing \"github_repository\": %w", ErrMissingField))
+	}
+	if i.ProjectLanguage == "" {
+		errors = append(errors, fmt.Errorf("missing \"project_language\": %w", ErrMissingField))
+	}
+	if i.ProjectName == "" {
+		errors = append(errors, fmt.Errorf("missing \"project_name\": %w", ErrMissingField))
+	}
+	if err := i.ProjectName.Validate(); err != nil {
+		errors = append(errors, err)
+	}
+
+	return errors
+}
+
+func (s TestRunStatus) Validate() error {
+	switch s {
 	case StatusPending, StatusRunning, StatusFailed, StatusCompleted:
-		return TestRunStatus(s), nil
+		return nil
 	default:
-		return "", fmt.Errorf("invalid test run status: %q", s)
+		return fmt.Errorf("invalid test run status value %q: %w", s, ErrInvalidField)
+	}
+}
+
+func (p TestRunProjectName) Validate() error {
+	switch p {
+	case ProjectNameCurrencyExchange, ProjectNameTennisScoreboard, ProjectNameCloudFileStorage:
+		return nil
+	default:
+		return fmt.Errorf("invalid test run project name value %q: %w", p, ErrInvalidField)
 	}
 }
