@@ -21,7 +21,7 @@ func main() {
 		panic(logger.Fatal("Failed to run migrations", "error", err))
 	}
 
-	handler := testrun.NewHandler(testrun.NewService(testrun.NewStore(connPool)))
+	handler := testrun.NewHandler(testrun.NewService(testrun.NewStore(connPool), testrun.NewSuiteStore()))
 
 	mux := http.NewServeMux()
 
