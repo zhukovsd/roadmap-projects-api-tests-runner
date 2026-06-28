@@ -11,11 +11,12 @@ import (
 )
 
 type Service struct {
-	store *Store
+	store      *Store
+	suiteStore *SuiteStore
 }
 
-func NewService(store *Store) *Service {
-	return &Service{store}
+func NewService(store *Store, suiteStore *SuiteStore) *Service {
+	return &Service{store, suiteStore}
 }
 
 func (s *Service) Create(ctx context.Context, input CreateInput) (TestRun, error) {
@@ -31,7 +32,8 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (TestRun, error
 		return TestRun{}, fmt.Errorf("service.Create: %w", err)
 	}
 
-	go s.runTestSuite(suite, testRun)
+	s.suiteStore.Set(testRun.ID.String(), suite)
+	go s.runTestSuite(context.Background(), suite, testRun)
 
 	return testRun, nil
 }
@@ -42,6 +44,12 @@ func (s *Service) FindByID(ctx context.Context, id uuid.UUID) (TestRun, error) {
 	testRun, err := s.store.FindByID(ctx, id)
 	if err != nil {
 		return TestRun{}, fmt.Errorf("service.FindByID: %w", err)
+	}
+	if testRun.Status == StatusRunning {
+		if suite, found := s.suiteStore.Get(id.String()); found {
+			finished, total := suite.Progress()
+			testRun.Progress = &TestRunProgress{finished, total}
+		}
 	}
 	return testRun, nil
 }
@@ -56,11 +64,17 @@ func (s *Service) List(ctx context.Context, filters filters) ([]TestRun, error) 
 	return testRuns, nil
 }
 
-func (s *Service) runTestSuite(suite Suite, testRun TestRun) {
+func (s *Service) runTestSuite(ctx context.Context, suite Suite, testRun TestRun) {
 	logger.Info("Running test suite", "project", testRun.ProjectName, "telegramUserID", testRun.TelegramUserID)
 
-	testResults := suite.Run()
+	err := s.store.Update(context.Background(), testRun.ID, updateParams{Status: StatusRunning})
+	if err != nil {
+		logger.Error("Failed to update test run status", "error", err, "testRun", testRun)
+	}
+
+	testResults := suite.Run(ctx)
 	completedAt := time.Now().Unix()
+	s.suiteStore.Delete(testRun.ID.String())
 
 	reportBytes, err := json.Marshal(testResults)
 	if err != nil {
