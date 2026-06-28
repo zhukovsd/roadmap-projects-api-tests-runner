@@ -1,21 +1,19 @@
 package testrun
 
-import "fmt"
-
-type TestResult struct {
-	Name   string
-	Passed bool
-	Error  error
-}
+import (
+	"context"
+	"fmt"
+)
 
 type Suite interface {
-	Run() []TestResult
+	Run(ctx context.Context) []TestResult
+	Progress() (finished, total int)
 }
 
 func newTestSuite(project TestRunProjectName, deployBaseURL string) (Suite, error) {
 	switch project {
 	case ProjectNameCurrencyExchange:
-		return CurrencyExchangeSuite{host: deployBaseURL}, nil
+		return NewCurrencyExchangeSuite(deployBaseURL), nil
 	default:
 		return nil, fmt.Errorf("unknown project name %q: %w", project, ErrInvalidField)
 	}
