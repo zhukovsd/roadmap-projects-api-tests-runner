@@ -10,6 +10,7 @@ import (
 
 type TestRunStatus string
 type TestRunProjectName string
+type TestResultStatus string
 
 const (
 	StatusPending   TestRunStatus = "PENDING"
@@ -22,6 +23,12 @@ const (
 	ProjectNameCurrencyExchange TestRunProjectName = "CURRENCY_EXCHANGE"
 	ProjectNameTennisScoreboard TestRunProjectName = "TENNIS_SCOREBOARD"
 	ProjectNameCloudFileStorage TestRunProjectName = "CLOUD_FILE_STORAGE"
+)
+
+const (
+	ResultStatusPassed    TestResultStatus = "PASSED"
+	ResultStatusFailed    TestResultStatus = "FAILED"
+	ResultStatusCancelled TestResultStatus = "CANCELLED"
 )
 
 type TestRun struct {
@@ -38,6 +45,19 @@ type TestRun struct {
 	Status           TestRunStatus      `db:"status" json:"status"`
 	Error            *string            `db:"error" json:"error"`
 	Report           *json.RawMessage   `db:"report" json:"report"`
+	Progress         *TestRunProgress   `db:"-" json:"progress"`
+}
+
+type TestResult struct {
+	Name   string           `json:"name"`
+	Status TestResultStatus `json:"status"`
+	Error  string           `json:"error"`
+	fatal  bool
+}
+
+type TestRunProgress struct {
+	Finished int `json:"finished"`
+	Total    int `json:"total"`
 }
 
 type CreateInput struct {

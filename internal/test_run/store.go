@@ -73,6 +73,7 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 		status,
 		nil,
 		nil,
+		nil,
 	}, nil
 }
 
