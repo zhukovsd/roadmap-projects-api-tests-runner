@@ -111,7 +111,7 @@ func (s *Store) FindByID(ctx context.Context, id uuid.UUID) (TestRun, error) {
 	return testRun, nil
 }
 
-func (s *Store) List(ctx context.Context, filters Filters) ([]TestRun, error) {
+func (s *Store) List(ctx context.Context, filters filters) ([]TestRun, error) {
 	query := `
 		SELECT 
 			id, 
@@ -190,7 +190,7 @@ func (s *Store) List(ctx context.Context, filters Filters) ([]TestRun, error) {
 	return runs, nil
 }
 
-func (s *Store) Update(ctx context.Context, id uuid.UUID, input UpdateInput) error {
+func (s *Store) Update(ctx context.Context, id uuid.UUID, input updateParams) error {
 	_, err := s.db.Exec(
 		ctx,
 		`UPDATE "Test_runs"

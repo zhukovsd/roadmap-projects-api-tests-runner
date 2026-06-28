@@ -46,7 +46,7 @@ func (s *Service) FindByID(ctx context.Context, id uuid.UUID) (TestRun, error) {
 	return testRun, nil
 }
 
-func (s *Service) List(ctx context.Context, filters Filters) ([]TestRun, error) {
+func (s *Service) List(ctx context.Context, filters filters) ([]TestRun, error) {
 	logger.Info("Finding test run by filters", "filters", filters)
 
 	testRuns, err := s.store.List(ctx, filters)
@@ -68,7 +68,7 @@ func (s *Service) runTestSuite(suite Suite, testRun TestRun) {
 
 		error := "Failed to marshal report"
 
-		err = s.store.Update(context.Background(), testRun.ID, UpdateInput{
+		err = s.store.Update(context.Background(), testRun.ID, updateParams{
 			CompletedAt: &completedAt,
 			Status:      StatusCompleted,
 			Error:       &error,
@@ -81,7 +81,7 @@ func (s *Service) runTestSuite(suite Suite, testRun TestRun) {
 
 	report := json.RawMessage(reportBytes)
 
-	err = s.store.Update(context.Background(), testRun.ID, UpdateInput{
+	err = s.store.Update(context.Background(), testRun.ID, updateParams{
 		CompletedAt: &completedAt,
 		Status:      StatusCompleted,
 		Error:       nil,

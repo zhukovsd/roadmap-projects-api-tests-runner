@@ -111,7 +111,7 @@ func (h *Handler) List(resp http.ResponseWriter, req *http.Request) {
 		status = &s
 	}
 
-	filters := Filters{
+	filters := filters{
 		DeployBaseURL:    emptyToNil(q.Get("deployBaseUrl")),
 		TelegramUsername: emptyToNil(q.Get("telegramUsername")),
 		TelegramUserID:   tgID,

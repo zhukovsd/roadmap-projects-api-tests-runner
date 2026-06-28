@@ -50,14 +50,14 @@ type CreateInput struct {
 	ProjectName      TestRunProjectName `json:"project_name"`
 }
 
-type UpdateInput struct {
+type updateParams struct {
 	CompletedAt *int64
 	Status      TestRunStatus
 	Error       *string
 	Report      *json.RawMessage
 }
 
-type Filters struct {
+type filters struct {
 	DeployBaseURL    *string
 	TelegramUsername *string
 	TelegramUserID   *int64
