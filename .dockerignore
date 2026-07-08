@@ -4,3 +4,4 @@
 .gitignore
 docker-compose.*
 justfile
+bin
