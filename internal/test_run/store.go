@@ -39,9 +39,13 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 			completed_at,
 			status,
 			error,
-			report
+			report,
+			total,
+			passed,
+			failed,
+			skipped
 		)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
 		id,
 		input.DeployBaseURL,
 		input.TelegramUsername,
@@ -55,6 +59,10 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 		status,
 		nil,
 		nil,
+		input.Progress.Total,
+		input.Progress.Passed,
+		input.Progress.Failed,
+		input.Progress.Skipped,
 	)
 	if err != nil {
 		return TestRun{}, fmt.Errorf("store.Create: %w", err)
@@ -73,7 +81,7 @@ func (s *Store) Create(ctx context.Context, input CreateInput) (TestRun, error) 
 		status,
 		nil,
 		nil,
-		nil,
+		input.Progress,
 	}, nil
 }
 
@@ -93,7 +101,11 @@ func (s *Store) FindByID(ctx context.Context, id uuid.UUID) (TestRun, error) {
 			completed_at,
 			status,
 			error,
-			report
+			report,
+			total,
+			passed,
+			failed,
+			skipped
 		FROM "Test_runs" WHERE id = $1`,
 		id,
 	)
@@ -127,7 +139,11 @@ func (s *Store) List(ctx context.Context, filters filters) ([]TestRun, error) {
 			completed_at, 
 			status, 
 			error,
-			report
+			report,
+			total,
+			passed,
+			failed,
+			skipped
 	        FROM "Test_runs"`
 
 	var conditions []string
@@ -199,12 +215,18 @@ func (s *Store) Update(ctx context.Context, id uuid.UUID, input updateParams) er
 			completed_at = $1,
 			status = $2,
 			error = $3,
-			report = $4
-		WHERE id = $5`,
+			report = $4,
+			passed = $5,
+			failed = $6,
+			skipped = $7
+		WHERE id = $8`,
 		input.CompletedAt,
 		input.Status,
 		input.Error,
 		input.Report,
+		input.Progress.Passed,
+		input.Progress.Failed,
+		input.Progress.Skipped,
 		id,
 	)
 	if err != nil {
