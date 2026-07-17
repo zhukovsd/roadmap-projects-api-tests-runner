@@ -45,7 +45,7 @@ type TestRun struct {
 	Status           TestRunStatus      `db:"status" json:"status"`
 	Error            *string            `db:"error" json:"error"`
 	Report           *json.RawMessage   `db:"report" json:"report"`
-	Progress         *TestRunProgress   `db:"-" json:"progress"`
+	Progress
 }
 
 type TestResult struct {
@@ -55,9 +55,11 @@ type TestResult struct {
 	fatal  bool
 }
 
-type TestRunProgress struct {
-	Finished int `json:"finished"`
-	Total    int `json:"total"`
+type Progress struct {
+	Total   int `db:"total" json:"total"`
+	Passed  int `db:"passed" json:"passed"`
+	Failed  int `db:"failed" json:"failed"`
+	Skipped int `db:"skipped" json:"skipped"`
 }
 
 type CreateInput struct {
@@ -68,6 +70,7 @@ type CreateInput struct {
 	GithubRepository string             `json:"github_repository"`
 	ProjectLanguage  string             `json:"project_language"`
 	ProjectName      TestRunProjectName `json:"project_name"`
+	Progress         Progress
 }
 
 type updateParams struct {
@@ -75,6 +78,7 @@ type updateParams struct {
 	Status      TestRunStatus
 	Error       *string
 	Report      *json.RawMessage
+	Progress    Progress
 }
 
 type filters struct {
