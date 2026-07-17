@@ -26,9 +26,9 @@ const (
 )
 
 const (
-	ResultStatusPassed    TestResultStatus = "PASSED"
-	ResultStatusFailed    TestResultStatus = "FAILED"
-	ResultStatusCancelled TestResultStatus = "CANCELLED"
+	ResultStatusPassed  TestResultStatus = "PASSED"
+	ResultStatusFailed  TestResultStatus = "FAILED"
+	ResultStatusSkipped TestResultStatus = "SKIPPED"
 )
 
 type TestRun struct {
@@ -49,10 +49,12 @@ type TestRun struct {
 }
 
 type TestResult struct {
-	Name   string           `json:"name"`
-	Status TestResultStatus `json:"status"`
-	Error  string           `json:"error"`
-	fatal  bool
+	Name        string           `json:"name"`
+	Status      TestResultStatus `json:"status"`
+	Output      string           `json:"output"`
+	Description string           `json:"description"`
+	Time        int64            `json:"time"`
+	Elapsed     int64            `json:"elapsed"`
 }
 
 type Progress struct {
