@@ -1,0 +1,1652 @@
+[
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AED",
+    "rate": 4.198
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AFN",
+    "rate": 75.865
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ALL",
+    "rate": 93.66
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AMD",
+    "rate": 419.21
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ANG",
+    "rate": 2.0461
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AOA",
+    "rate": 1048.71
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ARS",
+    "rate": 1701.42
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AUD",
+    "rate": 1.6473
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AWG",
+    "rate": 2.0548
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "AZN",
+    "rate": 1.9429
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BAM",
+    "rate": 1.9558
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BBD",
+    "rate": 2.3429
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BDT",
+    "rate": 140.85
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BHD",
+    "rate": 0.4298
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BIF",
+    "rate": 3419.96
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BMD",
+    "rate": 1.1431
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BND",
+    "rate": 1.477
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BOB",
+    "rate": 9.4912
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BRL",
+    "rate": 5.8468
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BSD",
+    "rate": 1.1607
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BTN",
+    "rate": 109.06
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BWP",
+    "rate": 15.2161
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BYN",
+    "rate": 3.2717
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "BZD",
+    "rate": 2.3425
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CAD",
+    "rate": 1.6187
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CDF",
+    "rate": 2581.91
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CHF",
+    "rate": 0.92336
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CLP",
+    "rate": 1059.43
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CNH",
+    "rate": 7.7549
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CNY",
+    "rate": 7.745
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "COP",
+    "rate": 3735.25
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CRC",
+    "rate": 519.07
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CUP",
+    "rate": 27.434
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CVE",
+    "rate": 110.26
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "CZK",
+    "rate": 24.261
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "DJF",
+    "rate": 202.28
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "DKK",
+    "rate": 7.4773
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "DOP",
+    "rate": 68.745
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "DZD",
+    "rate": 152.31
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "EGP",
+    "rate": 56.933
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ERN",
+    "rate": 17.5265
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ETB",
+    "rate": 182.06
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "EUR",
+    "rate": 1.0
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "FJD",
+    "rate": 2.556
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "FKP",
+    "rate": 0.85268
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GBP",
+    "rate": 0.85268
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GEL",
+    "rate": 3.0083
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GGP",
+    "rate": 0.85268
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GHS",
+    "rate": 13.2351
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GIP",
+    "rate": 0.86769
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GMD",
+    "rate": 83.01
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GNF",
+    "rate": 9054
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GTQ",
+    "rate": 8.7396
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "GYD",
+    "rate": 244.37
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "HKD",
+    "rate": 8.9705
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "HNL",
+    "rate": 30.673
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "HTG",
+    "rate": 149.64
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "HUF",
+    "rate": 356.56
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "IDR",
+    "rate": 20658
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ILS",
+    "rate": 3.4422
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "IMP",
+    "rate": 0.85268
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "INR",
+    "rate": 109.06
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "IQD",
+    "rate": 1497.37
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "IRR",
+    "rate": 1568282
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ISK",
+    "rate": 143.53
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "JEP",
+    "rate": 0.85268
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "JMD",
+    "rate": 178.99
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "JOD",
+    "rate": 0.81045
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "JPY",
+    "rate": 185.25
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KES",
+    "rate": 147.53
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KGS",
+    "rate": 100.0
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KHR",
+    "rate": 4614.93
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KMF",
+    "rate": 493.33
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KPW",
+    "rate": 148.59
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KRW",
+    "rate": 1718.41
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KWD",
+    "rate": 0.3525
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KYD",
+    "rate": 0.96182
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "KZT",
+    "rate": 535.26
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "LAK",
+    "rate": 25711
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "LBP",
+    "rate": 105853
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "LKR",
+    "rate": 382.22
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "LRD",
+    "rate": 207.69
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "LSL",
+    "rate": 18.6976
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "LYD",
+    "rate": 7.3273
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MAD",
+    "rate": 10.6812
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MDL",
+    "rate": 20.06
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MGA",
+    "rate": 4858.47
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MKD",
+    "rate": 61.676
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MMK",
+    "rate": 2400.59
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MNT",
+    "rate": 4095.52
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MOP",
+    "rate": 9.2397
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MRO",
+    "rate": 45.233
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MRU",
+    "rate": 45.777
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MUR",
+    "rate": 53.927
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MVR",
+    "rate": 17.5637
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MWK",
+    "rate": 1987.68
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MXN",
+    "rate": 20.014
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MYR",
+    "rate": 4.6554
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "MZN",
+    "rate": 72.493
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "NAD",
+    "rate": 18.7032
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "NGN",
+    "rate": 1589.01
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "NIO",
+    "rate": 42.014
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "NOK",
+    "rate": 11.158
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "NPR",
+    "rate": 174.44
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "NZD",
+    "rate": 1.9829
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "OMR",
+    "rate": 0.43952
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PAB",
+    "rate": 1.1453
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PEN",
+    "rate": 3.883
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PGK",
+    "rate": 5.0484
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PHP",
+    "rate": 70.381
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PKR",
+    "rate": 318.72
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PLN",
+    "rate": 4.3399
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "PYG",
+    "rate": 6954
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "QAR",
+    "rate": 4.1608
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "RON",
+    "rate": 5.2353
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "RSD",
+    "rate": 117.4
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "RUB",
+    "rate": 87.6
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "RWF",
+    "rate": 1679.06
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SAR",
+    "rate": 4.2866
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SBD",
+    "rate": 9.2534
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SCR",
+    "rate": 16.2524
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SDG",
+    "rate": 686.78
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SEK",
+    "rate": 11.0318
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SGD",
+    "rate": 1.477
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SHP",
+    "rate": 0.85268
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SLE",
+    "rate": 27.753
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SOS",
+    "rate": 654.63
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SRD",
+    "rate": 43.083
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SSP",
+    "rate": 5471
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "STN",
+    "rate": 24.627
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SVC",
+    "rate": 10.0262
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SYP",
+    "rate": 139.57
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "SZL",
+    "rate": 18.6912
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "THB",
+    "rate": 38.111
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TJS",
+    "rate": 10.573
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TMT",
+    "rate": 4.0008
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TND",
+    "rate": 3.3734
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TOP",
+    "rate": 2.7272
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TRY",
+    "rate": 53.679
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TTD",
+    "rate": 7.7276
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TWD",
+    "rate": 36.724
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "TZS",
+    "rate": 2999.65
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "UAH",
+    "rate": 50.932
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "UGX",
+    "rate": 4213.45
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "USD",
+    "rate": 1.1431
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "UYU",
+    "rate": 46.045
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "UZS",
+    "rate": 13787
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "VES",
+    "rate": 807.51
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "VND",
+    "rate": 29934
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "VUV",
+    "rate": 135.79
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "WST",
+    "rate": 3.1266
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XAF",
+    "rate": 655.96
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XAG",
+    "rate": 0.0193
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XAU",
+    "rate": 0.00028
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XCD",
+    "rate": 3.1608
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XCG",
+    "rate": 2.0546
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XDR",
+    "rate": 0.84091
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XOF",
+    "rate": 655.96
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XPD",
+    "rate": 0.00091
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XPF",
+    "rate": 119.63
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "XPT",
+    "rate": 0.00071
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "YER",
+    "rate": 272.88
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ZAR",
+    "rate": 18.6558
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ZMW",
+    "rate": 20.671
+  },
+  {
+    "baseCurrencyCode": "EUR",
+    "targetCurrencyCode": "ZWG",
+    "rate": 30.628
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AED",
+    "rate": 3.6725
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AFN",
+    "rate": 66.368
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ALL",
+    "rate": 81.94
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AMD",
+    "rate": 366.74
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ANG",
+    "rate": 1.79
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AOA",
+    "rate": 917.44
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ARS",
+    "rate": 1488.44
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AUD",
+    "rate": 1.4411
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AWG",
+    "rate": 1.7976
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "AZN",
+    "rate": 1.6997
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BAM",
+    "rate": 1.711
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BBD",
+    "rate": 2.0496
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BDT",
+    "rate": 123.22
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BHD",
+    "rate": 0.376
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BIF",
+    "rate": 2991.87
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BMD",
+    "rate": 1.0
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BND",
+    "rate": 1.2921
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BOB",
+    "rate": 8.3031
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BRL",
+    "rate": 5.115
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BSD",
+    "rate": 1.0154
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BTN",
+    "rate": 95.41
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BWP",
+    "rate": 13.3115
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BYN",
+    "rate": 2.8622
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "BZD",
+    "rate": 2.0493
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CAD",
+    "rate": 1.4161
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CDF",
+    "rate": 2258.72
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CHF",
+    "rate": 0.80778
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CLP",
+    "rate": 926.81
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CNH",
+    "rate": 6.7842
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CNY",
+    "rate": 6.7755
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "COP",
+    "rate": 3267.7
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CRC",
+    "rate": 454.09
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CUP",
+    "rate": 24.0
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CVE",
+    "rate": 96.46
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "CZK",
+    "rate": 21.224
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "DJF",
+    "rate": 176.96
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "DKK",
+    "rate": 6.5413
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "DOP",
+    "rate": 60.14
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "DZD",
+    "rate": 133.24
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "EGP",
+    "rate": 49.807
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ERN",
+    "rate": 15.3326
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ETB",
+    "rate": 159.27
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "EUR",
+    "rate": 0.87483
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "FJD",
+    "rate": 2.236
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "FKP",
+    "rate": 0.74595
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GBP",
+    "rate": 0.74595
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GEL",
+    "rate": 2.6317
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GGP",
+    "rate": 0.74595
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GHS",
+    "rate": 11.5784
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GIP",
+    "rate": 0.75908
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GMD",
+    "rate": 72.622
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GNF",
+    "rate": 7921
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GTQ",
+    "rate": 7.6456
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "GYD",
+    "rate": 213.78
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "HKD",
+    "rate": 7.8477
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "HNL",
+    "rate": 26.833
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "HTG",
+    "rate": 130.91
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "HUF",
+    "rate": 311.93
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "IDR",
+    "rate": 18072
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ILS",
+    "rate": 3.0114
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "IMP",
+    "rate": 0.74595
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "INR",
+    "rate": 95.41
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "IQD",
+    "rate": 1309.94
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "IRR",
+    "rate": 1371975
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ISK",
+    "rate": 125.57
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "JEP",
+    "rate": 0.74595
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "JMD",
+    "rate": 156.58
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "JOD",
+    "rate": 0.709
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "JPY",
+    "rate": 162.06
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KES",
+    "rate": 129.07
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KGS",
+    "rate": 87.48
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KHR",
+    "rate": 4037.26
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KMF",
+    "rate": 431.58
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KPW",
+    "rate": 129.99
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KRW",
+    "rate": 1503.31
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KWD",
+    "rate": 0.30838
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KYD",
+    "rate": 0.84143
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "KZT",
+    "rate": 468.26
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "LAK",
+    "rate": 22492
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "LBP",
+    "rate": 92603
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "LKR",
+    "rate": 334.37
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "LRD",
+    "rate": 181.69
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "LSL",
+    "rate": 16.3572
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "LYD",
+    "rate": 6.4101
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MAD",
+    "rate": 9.3442
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MDL",
+    "rate": 17.5486
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MGA",
+    "rate": 4250.32
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MKD",
+    "rate": 53.955
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MMK",
+    "rate": 2100.1
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MNT",
+    "rate": 3582.87
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MOP",
+    "rate": 8.0831
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MRO",
+    "rate": 39.571
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MRU",
+    "rate": 40.047
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MUR",
+    "rate": 47.177
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MVR",
+    "rate": 15.3652
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MWK",
+    "rate": 1738.87
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MXN",
+    "rate": 17.5087
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MYR",
+    "rate": 4.0726
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "MZN",
+    "rate": 63.419
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "NAD",
+    "rate": 16.3621
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "NGN",
+    "rate": 1390.11
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "NIO",
+    "rate": 36.755
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "NOK",
+    "rate": 9.7613
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "NPR",
+    "rate": 152.61
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "NZD",
+    "rate": 1.7347
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "OMR",
+    "rate": 0.3845
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PAB",
+    "rate": 1.0019
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PEN",
+    "rate": 3.3969
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PGK",
+    "rate": 4.4165
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PHP",
+    "rate": 61.571
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PKR",
+    "rate": 278.83
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PLN",
+    "rate": 3.7966
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "PYG",
+    "rate": 6084
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "QAR",
+    "rate": 3.64
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "RON",
+    "rate": 4.58
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "RSD",
+    "rate": 102.71
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "RUB",
+    "rate": 76.637
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "RWF",
+    "rate": 1468.88
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SAR",
+    "rate": 3.75
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SBD",
+    "rate": 8.0951
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SCR",
+    "rate": 14.218
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SDG",
+    "rate": 600.81
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SEK",
+    "rate": 9.6509
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SGD",
+    "rate": 1.2921
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SHP",
+    "rate": 0.74595
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SLE",
+    "rate": 24.279
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SOS",
+    "rate": 572.69
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SRD",
+    "rate": 37.69
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SSP",
+    "rate": 4786.46
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "STN",
+    "rate": 21.544
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SVC",
+    "rate": 8.7712
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SYP",
+    "rate": 122.1
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "SZL",
+    "rate": 16.3515
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "THB",
+    "rate": 33.34
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TJS",
+    "rate": 9.2495
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TMT",
+    "rate": 3.5
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TND",
+    "rate": 2.9511
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TOP",
+    "rate": 2.3858
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TRY",
+    "rate": 46.96
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TTD",
+    "rate": 6.7603
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TWD",
+    "rate": 32.127
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "TZS",
+    "rate": 2624.17
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "UAH",
+    "rate": 44.557
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "UGX",
+    "rate": 3686.03
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "USD",
+    "rate": 1.0
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "UYU",
+    "rate": 40.281
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "UZS",
+    "rate": 12061
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "VES",
+    "rate": 706.43
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "VND",
+    "rate": 26187
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "VUV",
+    "rate": 118.79
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "WST",
+    "rate": 2.7352
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XAF",
+    "rate": 573.85
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XAG",
+    "rate": 0.01688
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XAU",
+    "rate": 0.00024
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XCD",
+    "rate": 2.7652
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XCG",
+    "rate": 1.7975
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XDR",
+    "rate": 0.73565
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XOF",
+    "rate": 573.85
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XPD",
+    "rate": 0.0008
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XPF",
+    "rate": 104.66
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "XPT",
+    "rate": 0.00062
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "YER",
+    "rate": 238.73
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ZAR",
+    "rate": 16.3206
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ZMW",
+    "rate": 18.0838
+  },
+  {
+    "baseCurrencyCode": "USD",
+    "targetCurrencyCode": "ZWG",
+    "rate": 26.794
+  }
+]
