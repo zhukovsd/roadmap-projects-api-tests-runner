@@ -27,6 +27,8 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (TestRun, error
 		return TestRun{}, fmt.Errorf("service.Create: %w", err)
 	}
 
+	input.Progress = suite.Progress(ctx)
+
 	testRun, err := s.store.Create(ctx, input)
 	if err != nil {
 		return TestRun{}, fmt.Errorf("service.Create: %w", err)
@@ -47,8 +49,7 @@ func (s *Service) FindByID(ctx context.Context, id uuid.UUID) (TestRun, error) {
 	}
 	if testRun.Status == StatusRunning {
 		if suite, found := s.suiteStore.Get(id.String()); found {
-			finished, total := suite.Progress()
-			testRun.Progress = &TestRunProgress{finished, total}
+			testRun.Progress = suite.Progress(ctx)
 		}
 	}
 	return testRun, nil
@@ -64,7 +65,7 @@ func (s *Service) List(ctx context.Context, filters filters) ([]TestRun, error) 
 	return testRuns, nil
 }
 
-func (s *Service) runTestSuite(ctx context.Context, suite Suite, testRun TestRun) {
+func (s *Service) runTestSuite(ctx context.Context, suite *Suite, testRun TestRun) {
 	logger.Info("Running test suite", "project", testRun.ProjectName, "telegramUserID", testRun.TelegramUserID)
 
 	err := s.store.Update(context.Background(), testRun.ID, updateParams{Status: StatusRunning})
@@ -72,20 +73,37 @@ func (s *Service) runTestSuite(ctx context.Context, suite Suite, testRun TestRun
 		logger.Error("Failed to update test run status", "error", err, "testRun", testRun)
 	}
 
-	testResults := suite.Run(ctx)
+	testResults, err := suite.Run(ctx)
+	progress := suite.Progress(ctx)
 	completedAt := time.Now().Unix()
 	s.suiteStore.Delete(testRun.ID.String())
 
+	if err != nil {
+		errTxt := "Failed to run test suite"
+		logger.Error(errTxt, "error", err, "testRun", testRun)
+
+		err := s.store.Update(ctx, testRun.ID, updateParams{
+			CompletedAt: &completedAt,
+			Status:      StatusFailed,
+			Error:       &errTxt,
+			Progress:    progress,
+		})
+		if err != nil {
+			logger.Error("Failed to update test run", "error", err, "testRun", testRun)
+		}
+		return
+	}
+
 	reportBytes, err := json.Marshal(testResults)
 	if err != nil {
-		logger.Error("Failed to marshal report: %w", err)
-
-		error := "Failed to marshal report"
+		errTxt := "Failed to marshal report"
+		logger.Error(errTxt, "error", err)
 
 		err = s.store.Update(context.Background(), testRun.ID, updateParams{
 			CompletedAt: &completedAt,
 			Status:      StatusCompleted,
-			Error:       &error,
+			Error:       &errTxt,
+			Progress:    progress,
 		})
 		if err != nil {
 			logger.Error("Failed to update test run", "error", err, "testRun", testRun)
@@ -100,6 +118,7 @@ func (s *Service) runTestSuite(ctx context.Context, suite Suite, testRun TestRun
 		Status:      StatusCompleted,
 		Error:       nil,
 		Report:      &report,
+		Progress:    progress,
 	})
 	if err != nil {
 		logger.Error("Failed to update test run", "error", err, "testRun", testRun)

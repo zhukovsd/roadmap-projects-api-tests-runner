@@ -10,15 +10,15 @@ func NewSuiteStore() *SuiteStore {
 	return &SuiteStore{}
 }
 
-func (s *SuiteStore) Get(id string) (Suite, bool) {
+func (s *SuiteStore) Get(id string) (*Suite, bool) {
 	val, found := s.m.Load(id)
 	if !found {
 		return nil, false
 	}
-	return val.(Suite), true
+	return val.(*Suite), true
 }
 
-func (s *SuiteStore) Set(id string, suite Suite) {
+func (s *SuiteStore) Set(id string, suite *Suite) {
 	s.m.Store(id, suite)
 }
 
