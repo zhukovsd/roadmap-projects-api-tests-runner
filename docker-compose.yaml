@@ -1,0 +1,28 @@
+services:
+  database:
+    image: postgres
+    container_name: test-runner-db
+    restart: always
+    env_file: .dev.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - 6666:5432
+
+  test-runner:
+    container_name: test-runner
+    build: .
+    env_file: .dev.env
+    environment:
+      POSTGRES_HOST: database
+      POSTGRES_PORT: 5432
+    ports:
+      - 8080:8080
+    depends_on:
+      database: 
+        condition: service_healthy
+    restart: unless-stopped
