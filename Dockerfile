@@ -11,13 +11,15 @@ COPY . .
 # static binary
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
-RUN go build -o test-runner ./cmd
+RUN go build -o bin/test-runner ./cmd
+RUN go test -o bin/currencyexchange.test -c ./tests/currency_exchange/currency_exchange_test.go
 
-FROM alpine:3
+FROM golang:1.26
 
 WORKDIR /app
 
-COPY --from=builder app/test-runner .
+COPY --from=builder app/bin/test-runner .
+COPY --from=builder app/bin/currencyexchange.test .
 COPY migrations ./migrations
 
 EXPOSE 8080
