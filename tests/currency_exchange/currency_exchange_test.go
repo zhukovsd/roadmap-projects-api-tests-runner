@@ -74,28 +74,28 @@ func TestHostIsReachable(t *testing.T) {
 	}
 	u, err := url.Parse(*baseURL)
 	if err != nil {
-		fatalf(t, "Failed to parse URL: %s", err)
+		fatalf(t, "Не удалось разобрать URL: %s", err)
 	}
 	ip := net.ParseIP(u.Hostname())
 
 	if ip != nil {
 		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsPrivate() {
-			fatalf(t, "Address %q is not accessible from the public internet", u.Host)
+			fatalf(t, "Адрес %q недоступен из публичного интернета", u.Host)
 		}
 		return
 	}
 
 	addrs, err := net.LookupHost(u.Hostname())
 	if err != nil {
-		fatalf(t, "No addresses found for host: %q", u.Hostname())
+		fatalf(t, "Не найдено адресов для хоста: %q", u.Hostname())
 	}
 	for _, a := range addrs {
 		ip := net.ParseIP(a)
 		if ip == nil {
-			fatalf(t, "Invalid address %q for host %q", a, u.Hostname())
+			fatalf(t, "Недопустимый адрес %q для хоста %q", a, u.Hostname())
 		}
 		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsPrivate() {
-			fatalf(t, "Address %q is not accessible from the public internet", u.Host)
+			fatalf(t, "Адрес %q недоступен из публичного интернета", u.Host)
 		}
 	}
 }
@@ -105,13 +105,13 @@ func TestGetCurrencies(t *testing.T) {
 
 	resp, err := doRequest(t, http.MethodGet, "/currencies", nil)
 	if err != nil {
-		t.Fatal("Failed to send request")
+		t.Fatal("Не удалось отправить запрос")
 	}
 	defer resp.Body.Close()
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatal("Failed to read response body")
+		t.Fatal("Не удалось прочитать тело ответа")
 	}
 
 	var body any
@@ -120,27 +120,27 @@ func TestGetCurrencies(t *testing.T) {
 	assert(t, "status code is 200", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "GET /currencies => HTTP статус код 200")
 		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status code %d got %d", http.StatusOK, resp.StatusCode)
+			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
 	assert(t, "no redirects", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "GET /currencies => HTTP статус код не в диапазоне 300-400 (редиректы)")
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			t.Errorf("Unexpected redirect status code %d", resp.StatusCode)
+			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
 		}
 	})
 	assert(t, "content type is json", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "GET /currencies => HTTP заголовок Content-Type начинается с application/json")
 		contentType := resp.Header.Get("Content-Type")
 		if !strings.HasPrefix(contentType, "application/json") {
-			t.Errorf("Expected Content-Type header %q got %q", "application/json", contentType)
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 		}
 	})
 
 	assert(t, "response is valid json", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "GET /currencies => Тело ответа парсится в JSON без ошибок")
 		if decodeErr != nil {
-			t.Errorf("Response body is not a valid JSON: %s", decodeErr)
+			t.Errorf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 	})
 
@@ -148,25 +148,25 @@ func TestGetCurrencies(t *testing.T) {
 	assert(t, "response is json array", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "GET /currencies => Тело ответа JSON массив")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isArray {
-			t.Error("Response body is not a JSON array")
+			t.Error("Тело ответа не является JSON-массивом")
 		}
 	})
 
 	assert(t, "response array elements are valid", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "GET /currencies => Объект JSON массива содержит id, name, code, sign поля")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isArray {
-			t.Skip("Response body is not a JSON array")
+			t.Skip("Тело ответа не является JSON-массивом")
 		}
 		for _, currency := range currencies {
 			c, ok := currency.(map[string]any)
 			if !ok {
-				t.Error("Array element is not a JSON object")
+				t.Error("Элемент массива не является JSON-объектом")
 			}
 			if valid, reason := isValidCurrency(c); !valid {
 				t.Error(reason)
@@ -179,7 +179,7 @@ func TestGetCurrencies(t *testing.T) {
 		decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&apiCurrencies); err != nil {
-			t.Errorf("Failed to unmarshal response body into struct (POJO/DTO): %s", err)
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
 		}
 	})
 }
@@ -197,19 +197,19 @@ func postCurrenciesSuccess(t *testing.T) {
 
 	reqCurrency, err := findUnusedCurrency()
 	if err != nil {
-		t.Logf("Failed to find real currency to insert, generating random one")
+		t.Logf("Не удалось найти реальную валюту для вставки, генерируется случайная")
 		reqCurrency = generateUnusedCurrency()
 	}
 
 	form := url.Values{"code": {reqCurrency.Code}, "sign": {reqCurrency.Sign}, "name": {reqCurrency.Name}}
 	resp, err := doRequest(t, http.MethodPost, "/currencies", &form)
 	if err != nil {
-		t.Fatal("Failed to send request")
+		t.Fatal("Не удалось отправить запрос")
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatal("Failed to read response body")
+		t.Fatal("Не удалось прочитать тело ответа")
 	}
 	defer resp.Body.Close()
 
@@ -219,14 +219,14 @@ func postCurrenciesSuccess(t *testing.T) {
 	assert(t, "status code is 201", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies => HTTP статус код 201")
 		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("Expected status code %d got %d", http.StatusCreated, resp.StatusCode)
+			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusCreated, resp.StatusCode)
 		}
 	})
 	assert(t, "content type is json", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies => HTTP заголовок Content-Type начинается с application/json")
 		contentType := resp.Header.Get("Content-Type")
 		if !strings.HasPrefix(contentType, "application/json") {
-			t.Errorf("Expected Content-Type header %q got %q", "application/json", contentType)
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 		}
 	})
 
@@ -234,20 +234,20 @@ func postCurrenciesSuccess(t *testing.T) {
 	assert(t, "response is json", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies => Тело ответа парсится в JSON объект без ошибок")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isObject {
-			t.Error("Response body is not a JSON object")
+			t.Error("Тело ответа не является JSON-объектом")
 		}
 	})
 
 	assert(t, "object fields are valid", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies => JSON Объект содержит id, name, code, sign поля")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isObject {
-			t.Skip("Response body is not a JSON object")
+			t.Skip("Тело ответа не является JSON-объектом")
 		}
 		valid, reason := isValidCurrency(currencyObject)
 		if !valid {
@@ -262,32 +262,32 @@ func postCurrenciesSuccess(t *testing.T) {
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&respCurrency); err != nil {
 			currencyDecodeErr = err
-			t.Errorf("Failed to unmarshal response body into struct (POJO/DTO): %s", err)
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
 		}
 	})
 
 	assert(t, "response echoes request fields", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies => JSON объект содержит отправленные name, code, sign поля")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isObject {
-			t.Skip("Response body is not a JSON object")
+			t.Skip("Тело ответа не является JSON-объектом")
 		}
 		if valid, reason := isValidCurrency(currencyObject); !valid {
 			t.Skip(reason)
 		}
 		if currencyDecodeErr != nil {
-			t.Skipf("Response body doesn't match expected schema: %s", currencyDecodeErr)
+			t.Skipf("Тело ответа не соответствует ожидаемой схеме: %s", currencyDecodeErr)
 		}
 		if respCurrency.Code != reqCurrency.Code {
-			t.Errorf("Expected response currency code %q got %q", reqCurrency.Code, respCurrency.Code)
+			t.Errorf("Ожидался код валюты %q, получен %q", reqCurrency.Code, respCurrency.Code)
 		}
 		if respCurrency.Name != reqCurrency.Name {
-			t.Errorf("Expected response currency name %q got %q", reqCurrency.Name, respCurrency.Name)
+			t.Errorf("Ожидалось название валюты %q, получено %q", reqCurrency.Name, respCurrency.Name)
 		}
 		if respCurrency.Sign != reqCurrency.Sign {
-			t.Errorf("Expected response currency sign %q got %q", reqCurrency.Sign, respCurrency.Sign)
+			t.Errorf("Ожидался знак валюты %q, получен %q", reqCurrency.Sign, respCurrency.Sign)
 		}
 	})
 
@@ -298,19 +298,19 @@ func postCurrenciesConflict(t *testing.T) {
 	t.Attr(tests.TestDescriptionAttr, "POST /currencies : существующая валюта")
 
 	if len(apiCurrencies) == 0 {
-		t.Skip("Unable to find currency that will trigger conflict")
+		t.Skip("Не удалось найти валюту, вызывающую конфликт")
 	}
 	currency := apiCurrencies[0]
 
 	form := url.Values{"code": {currency.Code}, "sign": {currency.Sign}, "name": {currency.Name}}
 	resp, err := doRequest(t, http.MethodPost, "/currencies", &form)
 	if err != nil {
-		t.Fatal("Failed to send request")
+		t.Fatal("Не удалось отправить запрос")
 	}
 
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		t.Fatal("Failed to read response body")
+		t.Fatal("Не удалось прочитать тело ответа")
 	}
 	defer resp.Body.Close()
 
@@ -320,14 +320,14 @@ func postCurrenciesConflict(t *testing.T) {
 	assert(t, "status code is 409", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies : существующая валюта => HTTP статус код 409")
 		if resp.StatusCode != http.StatusConflict {
-			t.Errorf("Expected status code %d got %d", http.StatusConflict, resp.StatusCode)
+			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusConflict, resp.StatusCode)
 		}
 	})
 	assert(t, "content type is json", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies => HTTP заголовок Content-Type начинается с application/json")
 		contentType := resp.Header.Get("Content-Type")
 		if !strings.HasPrefix(contentType, "application/json") {
-			t.Errorf("Expected Content-Type header %q got %q", "application/json", contentType)
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 		}
 	})
 
@@ -335,20 +335,20 @@ func postCurrenciesConflict(t *testing.T) {
 	assert(t, "response is json", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies : существующая валюта => Тело ответа парсится в JSON объект без ошибок")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isObject {
-			t.Error("Response body is not a JSON object")
+			t.Error("Тело ответа не является JSON-объектом")
 		}
 	})
 
 	assert(t, "response contains field message", func(t *testing.T) {
 		t.Attr(tests.TestDescriptionAttr, "POST /currencies : существующая валюта => JSON объект содержит поле message")
 		if decodeErr != nil {
-			t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 		if !isObject {
-			t.Skip("Response body is not a JSON object")
+			t.Skip("Тело ответа не является JSON-объектом")
 		}
 		valid, reason := isValidStringField(error, "message")
 		if !valid {
@@ -362,7 +362,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 
 	currency, err := findUnusedCurrency()
 	if err != nil {
-		t.Logf("Failed to find real currency to insert, generating random one")
+		t.Logf("Не удалось найти реальную валюту для вставки, генерируется случайная")
 		currency = generateUnusedCurrency()
 	}
 
@@ -412,13 +412,13 @@ func postCurrenciesBadRequest(t *testing.T) {
 		t.Run(tc.subName, func(t *testing.T) {
 			resp, err := doRequest(t, http.MethodPost, "/currencies", &tc.form)
 			if err != nil {
-				t.Skip("Failed to send request")
+				t.Skip("Не удалось отправить запрос")
 				return
 			}
 
 			bodyBytes, err := io.ReadAll(resp.Body)
 			if err != nil {
-				t.Fatal("Failed to read response body")
+				t.Fatal("Не удалось прочитать тело ответа")
 			}
 			defer resp.Body.Close()
 
@@ -431,7 +431,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 					fmt.Sprintf("POST /currencies : %s => HTTP статус код 400", tc.subDesc),
 				)
 				if resp.StatusCode != http.StatusBadRequest {
-					t.Errorf("Expected status code %d got %d", http.StatusBadRequest, resp.StatusCode)
+					t.Errorf("Ожидался код статуса %d, получен %d", http.StatusBadRequest, resp.StatusCode)
 				}
 			})
 			assert(t, "content type is json", func(t *testing.T) {
@@ -441,7 +441,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 				)
 				contentType := resp.Header.Get("Content-Type")
 				if !strings.HasPrefix(contentType, "application/json") {
-					t.Errorf("Expected Content-Type header %q got %q", "application/json", contentType)
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 				}
 			})
 
@@ -451,10 +451,10 @@ func postCurrenciesBadRequest(t *testing.T) {
 					tests.TestDescriptionAttr,
 					fmt.Sprintf("POST /currencies : %s => Тело ответа парсится в JSON объект без ошибок", tc.subDesc))
 				if decodeErr != nil {
-					t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
 				if !isObject {
-					t.Error("Response body is not a JSON object")
+					t.Error("Тело ответа не является JSON-объектом")
 				}
 			})
 
@@ -464,10 +464,10 @@ func postCurrenciesBadRequest(t *testing.T) {
 					fmt.Sprintf("POST /currencies : %s => JSON объект содержит поле message", tc.subDesc),
 				)
 				if decodeErr != nil {
-					t.Skipf("Response body is not a valid JSON: %s", decodeErr)
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
 				if !isObject {
-					t.Skip("Response body is not a JSON object")
+					t.Skip("Тело ответа не является JSON-объектом")
 				}
 				valid, reason := isValidStringField(error, "message")
 				if !valid {
@@ -499,14 +499,14 @@ func isValidCurrency(c map[string]any) (bool, string) {
 func isValidID(c map[string]any) (bool, string) {
 	id, found := c["id"]
 	if !found {
-		return false, "Object field 'id' is missing"
+		return false, "Отсутствует поле объекта 'id'"
 	}
 	f, ok := id.(float64)
 	if !ok {
-		return false, fmt.Sprintf("Object field 'id' is not a number: %q", id)
+		return false, fmt.Sprintf("Поле объекта 'id' не является числом: %q", id)
 	}
 	if f != math.Trunc(f) {
-		return false, fmt.Sprintf("Object field 'id' is not an integer: %f", f)
+		return false, fmt.Sprintf("Поле объекта 'id' не является целым числом: %f", f)
 	}
 	return true, ""
 }
@@ -514,14 +514,14 @@ func isValidID(c map[string]any) (bool, string) {
 func isValidCode(c map[string]any) (bool, string) {
 	codeAny, found := c["code"]
 	if !found {
-		return false, "Object field 'code' is missing"
+		return false, "Отсутствует поле объекта 'code'"
 	}
 	codeStr, ok := codeAny.(string)
 	if !ok {
-		return false, "Object field 'code' is not a string"
+		return false, "Поле объекта 'code' не является строкой"
 	}
 	if len(codeStr) != 3 {
-		return false, "Object field 'code' is not a valid currency code"
+		return false, "Поле объекта 'code' не является допустимым кодом валюты"
 	}
 	return true, ""
 }
@@ -529,11 +529,11 @@ func isValidCode(c map[string]any) (bool, string) {
 func isValidStringField(c map[string]any, field string) (bool, string) {
 	n, found := c[field]
 	if !found {
-		return false, fmt.Sprintf("Object field '%s' is missing", field)
+		return false, fmt.Sprintf("Отсутствует поле объекта '%s'", field)
 	}
 	_, ok := n.(string)
 	if !ok {
-		return false, fmt.Sprintf("Object field '%s' is not a string", field)
+		return false, fmt.Sprintf("Поле объекта '%s' не является строкой", field)
 	}
 	return true, ""
 }
