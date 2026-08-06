@@ -410,6 +410,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.subName, func(t *testing.T) {
+			t.Parallel()
 			resp, err := doRequest(t, http.MethodPost, "/currencies", &tc.form)
 			if err != nil {
 				t.Skip("Не удалось отправить запрос")
