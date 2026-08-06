@@ -77,7 +77,7 @@ func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
 			results = append(results, TestResult{
 				Name:        tc.Test.Name(),
 				Status:      status,
-				Output:      strings.Join(pkg.OutputLines(tc), ""),
+				Output:      cleanOutput(pkg.OutputLines(tc)),
 				Description: tc.Attributes[tests.TestDescriptionAttr],
 				Time:        tc.Time.Unix(),
 				Elapsed:     tc.Elapsed.Milliseconds(),
@@ -173,4 +173,42 @@ func (h *progressHandler) Event(event testjson.TestEvent, execution *testjson.Ex
 
 func (h *progressHandler) Err(text string) error {
 	return fmt.Errorf("progressHandler Err: %s", text)
+}
+
+func cleanOutput(lines []string) string {
+	var out []string
+
+	for _, line := range lines {
+		line = strings.TrimRight(line, "\n")
+
+		switch {
+		case strings.HasPrefix(line, "=== RUN"):
+			continue
+		case strings.HasPrefix(line, "=== PAUSE"):
+			continue
+		case strings.HasPrefix(line, "=== CONT"):
+			continue
+		case strings.HasPrefix(line, "=== ATTR"):
+			continue
+		case strings.HasPrefix(line, "--- PASS:"):
+			continue
+		case strings.HasPrefix(line, "--- FAIL:"):
+			continue
+		case strings.HasPrefix(line, "--- SKIP:"):
+			continue
+		}
+
+		if i := strings.Index(line, ": "); i != -1 {
+			if j := strings.Index(line[:i], ".go:"); j != -1 {
+				line = line[i+2:]
+			}
+		}
+
+		line = strings.TrimSpace(line)
+		if line != "" {
+			out = append(out, line)
+		}
+	}
+
+	return strings.Join(out, "\n")
 }

@@ -34,11 +34,11 @@ const (
 type TestRun struct {
 	ID               uuid.UUID          `db:"id" json:"id"`
 	DeployBaseURL    string             `db:"deploy_base_url" json:"deploy_base_url"`
-	TelegramUsername string             `db:"telegram_username" json:"telegram_username"`
-	TelegramUserID   int64              `db:"telegram_user_id" json:"telegram_user_id"`
-	GithubUsername   string             `db:"github_username" json:"github_username"`
-	GithubRepository string             `db:"github_repository" json:"github_repository"`
-	ProjectLanguage  string             `db:"project_language" json:"project_language"`
+	TelegramUsername *string            `db:"telegram_username" json:"telegram_username"`
+	TelegramUserID   *int64             `db:"telegram_user_id" json:"telegram_user_id"`
+	GithubUsername   *string            `db:"github_username" json:"github_username"`
+	GithubRepository *string            `db:"github_repository" json:"github_repository"`
+	ProjectLanguage  *string            `db:"project_language" json:"project_language"`
 	ProjectName      TestRunProjectName `db:"project_name" json:"project_name"`
 	CreatedAt        int64              `db:"created_at" json:"created_at"`
 	CompletedAt      *int64             `db:"completed_at" json:"completed_at"`
@@ -66,11 +66,11 @@ type Progress struct {
 
 type CreateInput struct {
 	DeployBaseURL    string             `json:"deploy_base_url"`
-	TelegramUsername string             `json:"telegram_username"`
-	TelegramUserID   int64              `json:"telegram_user_id"`
-	GithubUsername   string             `json:"github_username"`
-	GithubRepository string             `json:"github_repository"`
-	ProjectLanguage  string             `json:"project_language"`
+	TelegramUsername *string            `json:"telegram_username"`
+	TelegramUserID   *int64             `json:"telegram_user_id"`
+	GithubUsername   *string            `json:"github_username"`
+	GithubRepository *string            `json:"github_repository"`
+	ProjectLanguage  *string            `json:"project_language"`
 	ProjectName      TestRunProjectName `json:"project_name"`
 	Progress         Progress
 }
@@ -100,19 +100,19 @@ func (i CreateInput) Validate() []error {
 	if i.DeployBaseURL == "" {
 		errors = append(errors, fmt.Errorf("missing \"deploy_base_url\": %w", ErrMissingField))
 	}
-	if i.TelegramUsername == "" {
+	if i.TelegramUsername != nil && *i.TelegramUsername == "" {
 		errors = append(errors, fmt.Errorf("missing \"telegram_username\": %w", ErrMissingField))
 	}
-	if i.TelegramUserID == 0 {
+	if i.TelegramUserID != nil && *i.TelegramUserID == 0 {
 		errors = append(errors, fmt.Errorf("missing \"telegram_user_id\": %w", ErrMissingField))
 	}
-	if i.GithubUsername == "" {
+	if i.GithubUsername != nil && *i.GithubUsername == "" {
 		errors = append(errors, fmt.Errorf("missing \"github_username\": %w", ErrMissingField))
 	}
-	if i.GithubRepository == "" {
+	if i.GithubRepository != nil && *i.GithubRepository == "" {
 		errors = append(errors, fmt.Errorf("missing \"github_repository\": %w", ErrMissingField))
 	}
-	if i.ProjectLanguage == "" {
+	if i.ProjectLanguage != nil && *i.ProjectLanguage == "" {
 		errors = append(errors, fmt.Errorf("missing \"project_language\": %w", ErrMissingField))
 	}
 	if i.ProjectName == "" {
