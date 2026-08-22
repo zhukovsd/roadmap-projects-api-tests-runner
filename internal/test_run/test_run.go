@@ -55,6 +55,8 @@ type TestResult struct {
 	Description string           `json:"description"`
 	Time        int64            `json:"time"`
 	Elapsed     int64            `json:"elapsed"`
+	Request     string           `json:"request"`
+	Response    string           `json:"response"`
 }
 
 type Progress struct {

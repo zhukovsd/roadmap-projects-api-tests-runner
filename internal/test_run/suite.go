@@ -81,6 +81,8 @@ func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
 				Description: tc.Attributes[tests.TestDescriptionAttr],
 				Time:        tc.Time.Unix(),
 				Elapsed:     tc.Elapsed.Milliseconds(),
+				Request:     extractRequest(pkg.OutputLines(tc)),
+				Response:    extractResponse(pkg.OutputLines(tc)),
 			})
 		}
 	}
@@ -178,10 +180,22 @@ func (h *progressHandler) Err(text string) error {
 func cleanOutput(lines []string) string {
 	var out []string
 
+	skipping := false
 	for _, line := range lines {
-		line = strings.TrimRight(line, "\n")
+		line = stripCallerPrefix(strings.TrimSpace(strings.TrimRight(line, "\n")))
+
+		if skipping {
+			if strings.HasPrefix(line, tests.TestRequestEndMarker) || strings.HasPrefix(line, tests.TestResponseEndMarker) {
+				skipping = false
+			}
+			continue
+		}
 
 		switch {
+		case strings.HasPrefix(line, tests.TestRequestStartMarker),
+			strings.HasPrefix(line, tests.TestResponseStartMarker):
+			skipping = true
+			continue
 		case strings.HasPrefix(line, "=== RUN"):
 			continue
 		case strings.HasPrefix(line, "=== PAUSE"):
@@ -198,17 +212,67 @@ func cleanOutput(lines []string) string {
 			continue
 		}
 
-		if i := strings.Index(line, ": "); i != -1 {
-			if j := strings.Index(line[:i], ".go:"); j != -1 {
-				line = line[i+2:]
-			}
-		}
-
-		line = strings.TrimSpace(line)
 		if line != "" {
 			out = append(out, line)
 		}
 	}
 
 	return strings.Join(out, "\n")
+}
+
+func extractRequest(lines []string) string {
+	var out []string
+
+	reading := false
+	for _, line := range lines {
+		line = stripCallerPrefix(strings.TrimSpace(strings.TrimRight(line, "\n")))
+
+		if strings.HasPrefix(line, tests.TestRequestStartMarker) {
+			reading = true
+			continue
+		}
+		if strings.HasPrefix(line, tests.TestRequestEndMarker) {
+			break
+		}
+		if reading {
+			out = append(out, line)
+		}
+
+	}
+
+	return strings.Join(out, "\n")
+}
+
+func extractResponse(lines []string) string {
+	var out []string
+
+	reading := false
+	for _, line := range lines {
+		line = stripCallerPrefix(strings.TrimSpace(strings.TrimRight(line, "\n")))
+
+		if strings.HasPrefix(line, tests.TestResponseStartMarker) {
+			reading = true
+			continue
+		}
+		if strings.HasPrefix(line, tests.TestResponseEndMarker) {
+			break
+		}
+		if reading {
+			out = append(out, line)
+		}
+	}
+
+	return strings.Join(out, "\n")
+}
+
+func stripCallerPrefix(line string) string {
+	_, after, ok := strings.Cut(line, ".go:")
+	if !ok {
+		return line
+	}
+	_, after, ok = strings.Cut(after, ":")
+	if !ok {
+		return line
+	}
+	return strings.TrimPrefix(after, " ")
 }
