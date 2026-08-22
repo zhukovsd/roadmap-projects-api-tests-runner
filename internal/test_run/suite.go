@@ -74,6 +74,9 @@ func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
 
 	appendResults := func(cases []testjson.TestCase, status TestResultStatus) {
 		for _, tc := range cases {
+			if tc.Attributes[tests.TestDescriptionAttr] == "" {
+				continue
+			}
 			results = append(results, TestResult{
 				Name:        tc.Test.Name(),
 				Status:      status,
@@ -115,7 +118,12 @@ func (s *Suite) total(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("failed to scan test output: %w", err)
 	}
 
-	total := exe.Total()
+	total := 0
+	for _, tc := range exe.Skipped() {
+		if tc.Attributes[tests.TestDescriptionAttr] != "" {
+			total++
+		}
+	}
 
 	totalCacheMu.Lock()
 	totalCache[s.testBin] = total
@@ -155,6 +163,24 @@ func (s *Suite) runTestBin(ctx context.Context, opts runOpts) (io.ReadCloser, er
 
 func (h *progressHandler) Event(event testjson.TestEvent, execution *testjson.Execution) error {
 	if event.Test == "" {
+		return nil
+	}
+
+	var cases []testjson.TestCase
+
+	pkg := execution.Package(event.Package)
+
+	switch event.Action {
+	case testjson.ActionPass:
+		cases = pkg.Passed
+	case testjson.ActionFail:
+		cases = pkg.Failed
+	case testjson.ActionSkip:
+		cases = pkg.Skipped
+	default:
+		return nil
+	}
+	if len(cases) == 0 || cases[len(cases)-1].Attributes[tests.TestDescriptionAttr] == "" {
 		return nil
 	}
 
