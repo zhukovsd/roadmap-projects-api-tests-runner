@@ -103,13 +103,12 @@ func TestGetCurrencies(t *testing.T) {
 
 	c.assert("status code is 200", "GET /currencies => HTTP статус код 200", func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
-			//TODO: Fix wording
-			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
 	c.assert("no redirects", "GET /currencies => HTTP статус код не в диапазоне 300-399 (редиректы)", func(t *testing.T) {
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
 		}
 	})
 	c.assert("content type is json", "GET /currencies => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
@@ -198,7 +197,7 @@ func postCurrenciesSuccess(t *testing.T) {
 
 	c.assert("status code is 201", "POST /currencies => HTTP статус код 201", func(t *testing.T) {
 		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusCreated, resp.StatusCode)
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusCreated, resp.StatusCode)
 		}
 	})
 	c.assert("content type is json", "POST /currencies => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
@@ -297,7 +296,7 @@ func postCurrenciesConflict(t *testing.T) {
 
 	c.assert("status code is 409", "POST /currencies : существующая валюта => HTTP статус код 409", func(t *testing.T) {
 		if resp.StatusCode != http.StatusConflict {
-			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusConflict, resp.StatusCode)
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusConflict, resp.StatusCode)
 		}
 	})
 	c.assert("content type is json", "POST /currencies => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
@@ -405,7 +404,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 
 			c.assert("status code is 400", fmt.Sprintf("POST /currencies : %s => HTTP статус код 400", tc.subDesc), func(t *testing.T) {
 				if resp.StatusCode != http.StatusBadRequest {
-					t.Errorf("Ожидался код статуса %d, получен %d", http.StatusBadRequest, resp.StatusCode)
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
 				}
 			})
 			c.assert("content type is json", fmt.Sprintf("POST /currencies : %s => HTTP заголовок Content-Type начинается с application/json", tc.subDesc), func(t *testing.T) {
@@ -471,12 +470,12 @@ func TestGetCurrency(t *testing.T) {
 
 	c.assert("status code is 200", injectCode("GET /currency/{code} => HTTP статус код 200"), func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
 	c.assert("no redirects", injectCode("GET /currency/{code} => HTTP статус код не в диапазоне 300-399 (редиректы)"), func(t *testing.T) {
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
 		}
 	})
 	c.assert("content type is json", injectCode("GET /currency/{code} => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
@@ -560,12 +559,12 @@ func TestGetExchangeRates(t *testing.T) {
 
 	c.assert("status code is 200", "GET /exchangeRates => HTTP статус код 200", func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
 	c.assert("no redirects", "GET /exchangeRates => HTTP статус код не в диапазоне 300-399 (редиректы)", func(t *testing.T) {
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
 		}
 	})
 	c.assert("content type is json", "GET /exchangeRates => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
@@ -651,12 +650,12 @@ func TestGetExchangeRate(t *testing.T) {
 
 	c.assert("status code is 200", injectCodes("GET /exchangeRate/{base}{target} => HTTP статус код 200"), func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
 	c.assert("no redirects", injectCodes("GET /exchangeRate/{base}{target} => HTTP статус код не в диапазоне 300-399 (редиректы)"), func(t *testing.T) {
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
-			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
 		}
 	})
 	c.assert("content type is json", injectCodes("GET /exchangeRate/{base}{target} => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
