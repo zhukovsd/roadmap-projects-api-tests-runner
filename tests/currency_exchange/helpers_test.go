@@ -98,6 +98,38 @@ func (c *checker) assert(name string, desc string, fn func(t *testing.T)) {
 	})
 }
 
+func mustMatchCurrencies(t *testing.T, got, want Currency) {
+	t.Helper()
+
+	if got.ID != want.ID {
+		t.Errorf("Ожидался ID валюты %d, получен %d", want.ID, got.ID)
+	}
+	if got.Code != want.Code {
+		t.Errorf("Ожидался код валюты %q, получен %q", want.Code, got.Code)
+	}
+	if got.Name != want.Name {
+		t.Errorf("Ожидалось название валюты %q, получено %q", want.Name, got.Name)
+	}
+	if got.Sign != want.Sign {
+		t.Errorf("Ожидался знак валюты %q, получен %q", want.Sign, got.Sign)
+	}
+}
+
+func mustMatchExchangeRates(t *testing.T, got, want ExchangeRate) {
+	t.Helper()
+
+	if got.ID != want.ID {
+		t.Errorf("Ожидался ID обменного курса %d, получен %d", want.ID, got.ID)
+	}
+
+	mustMatchCurrencies(t, got.BaseCurrency, want.BaseCurrency)
+	mustMatchCurrencies(t, got.TargetCurrency, want.TargetCurrency)
+
+	if got.Rate != want.Rate {
+		t.Errorf("Ожидался обменный курс %f, получен %f", want.Rate, got.Rate)
+	}
+}
+
 func isValidExchangeRate(er map[string]any) (bool, string) {
 	errors := make([]string, 0)
 
@@ -124,13 +156,8 @@ func isValidExchangeRate(er map[string]any) (bool, string) {
 	validateCurrency("baseCurrency")
 	validateCurrency("targetCurrency")
 
-	rate, found := er["rate"]
-	if !found {
-		errors = append(errors, "Отсутствует поле объекта `rate`")
-	}
-	_, ok := rate.(float64)
-	if !ok {
-		errors = append(errors, fmt.Sprintf("Поле объекта `rate` не является числом: %q", rate))
+	if valid, err := isValidRate(er); !valid {
+		errors = append(errors, err)
 	}
 
 	return len(errors) == 0, strings.Join(errors, "; ")
@@ -179,6 +206,18 @@ func isValidCode(c map[string]any) (bool, string) {
 	}
 	if len(codeStr) != 3 {
 		return false, "Поле объекта `code` не является допустимым кодом валюты"
+	}
+	return true, ""
+}
+
+func isValidRate(c map[string]any) (bool, string) {
+	rate, found := c["rate"]
+	if !found {
+		return false, "Отсутствует поле объекта `rate`"
+	}
+	_, ok := rate.(float64)
+	if !ok {
+		return false, fmt.Sprintf("Поле объекта `rate` не является числом: %q", rate)
 	}
 	return true, ""
 }

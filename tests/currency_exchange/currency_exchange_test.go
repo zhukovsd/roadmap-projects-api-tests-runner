@@ -103,6 +103,7 @@ func TestGetCurrencies(t *testing.T) {
 
 	c.assert("status code is 200", "GET /currencies => HTTP статус код 200", func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
+			//TODO: Fix wording
 			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
@@ -445,7 +446,10 @@ func TestGetCurrency(t *testing.T) {
 		t.Skip("Не удалось найти валюту, существующую в API")
 	}
 	reqCurrency := apiCurrencies[0]
-	resp, dumps, err := doRequest(t, http.MethodGet, "/currency/"+reqCurrency.Code, nil)
+
+	injectCode := strings.NewReplacer("{code}", reqCurrency.Code).Replace
+
+	resp, dumps, err := doRequest(t, http.MethodGet, injectCode("/currency/{code}"), nil)
 
 	var bodyBytes []byte
 	var body any
@@ -464,8 +468,6 @@ func TestGetCurrency(t *testing.T) {
 	}
 
 	c := &checker{t, dumps, err}
-
-	injectCode := strings.NewReplacer("{code}", reqCurrency.Code).Replace
 
 	c.assert("status code is 200", injectCode("GET /currency/{code} => HTTP статус код 200"), func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
@@ -518,7 +520,7 @@ func TestGetCurrency(t *testing.T) {
 		}
 	})
 
-	c.assert("response echoes requested currency", injectCode("GET /currency/{code} => JSON объект содержит ожидаемые name, code, sign поля"), func(t *testing.T) {
+	c.assert("response echoes requested currency", injectCode("GET /currency/{code} => JSON объект содержит ожидаемые id, name, code, sign поля"), func(t *testing.T) {
 		if decodeErr != nil {
 			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
@@ -531,15 +533,7 @@ func TestGetCurrency(t *testing.T) {
 		if currencyDecodeErr != nil {
 			t.Skipf("Тело ответа не соответствует ожидаемой схеме: %s", currencyDecodeErr)
 		}
-		if respCurrency.Code != reqCurrency.Code {
-			t.Errorf("Ожидался код валюты %q, получен %q", reqCurrency.Code, respCurrency.Code)
-		}
-		if respCurrency.Name != reqCurrency.Name {
-			t.Errorf("Ожидалось название валюты %q, получено %q", reqCurrency.Name, respCurrency.Name)
-		}
-		if respCurrency.Sign != reqCurrency.Sign {
-			t.Errorf("Ожидался знак валюты %q, получен %q", reqCurrency.Sign, respCurrency.Sign)
-		}
+		mustMatchCurrencies(t, respCurrency, reqCurrency)
 	})
 }
 
@@ -621,6 +615,105 @@ func TestGetExchangeRates(t *testing.T) {
 		if err := decoder.Decode(&apiExchangeRates); err != nil {
 			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
 		}
+	})
+}
+
+func TestGetExchangeRate(t *testing.T) {
+	if len(apiExchangeRates) == 0 {
+		t.Skip("Не удалось найти обменный курс, существующий в API")
+	}
+	reqExchangeRate := apiExchangeRates[0]
+
+	injectCodes := strings.NewReplacer(
+		"{base}", reqExchangeRate.BaseCurrency.Code,
+		"{target}", reqExchangeRate.TargetCurrency.Code,
+	).Replace
+
+	resp, dumps, err := doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	c.assert("status code is 200", injectCodes("GET /exchangeRate/{base}{target} => HTTP статус код 200"), func(t *testing.T) {
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", injectCodes("GET /exchangeRate/{base}{target} => HTTP статус код не в диапазоне 300-399 (редиректы)"), func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", injectCodes("GET /exchangeRate/{base}{target} => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, injectCodes("application/json")) {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", injectCodes("application/json"), contentType)
+		}
+	})
+
+	exchangeRateObject, isObject := body.(map[string]any)
+	c.assert("response is json", injectCodes("GET /exchangeRate/{base}{target} => Тело ответа парсится в JSON объект без ошибок"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Error("Тело ответа не является JSON-объектом")
+		}
+	})
+
+	c.assert("object fields are valid", injectCodes("GET /exchangeRate/{base}{target} => JSON Объект содержит id, baseCurrency, targetCurrency, rate поля"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		valid, reason := isValidExchangeRate(exchangeRateObject)
+		if !valid {
+			t.Error(reason)
+		}
+	})
+
+	var respExchangeRate ExchangeRate
+	var exchangeRateDecodeErr error
+	c.assert("response body matches expected schema", injectCodes("GET /exchangeRate/{base}{target} => JSON тело ответа соответствует схеме в ТЗ"), func(t *testing.T) {
+		decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&respExchangeRate); err != nil {
+			exchangeRateDecodeErr = err
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
+		}
+	})
+
+	c.assert("response echoes requested exchange rate", injectCodes("GET /exchangeRate/{base}{target} => JSON объект содержит ожидаемые id, baseCurrency, targetCurrency, rate поля"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		if valid, reason := isValidCurrency(exchangeRateObject); !valid {
+			t.Skip(reason)
+		}
+		if exchangeRateDecodeErr != nil {
+			t.Skipf("Тело ответа не соответствует ожидаемой схеме: %s", exchangeRateDecodeErr)
+		}
+		mustMatchExchangeRates(t, respExchangeRate, reqExchangeRate)
 	})
 }
 
