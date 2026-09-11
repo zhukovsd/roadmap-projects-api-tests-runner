@@ -439,7 +439,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 					t.Errorf("Ожидался код статуса %d, получен %d", http.StatusBadRequest, resp.StatusCode)
 				}
 			})
-			c.assert("content type is json", fmt.Sprintf("POST /currencies %s => HTTP заголовок Content-Type начинается с application/json", tc.subDesc), func(t *testing.T) {
+			c.assert("content type is json", fmt.Sprintf("POST /currencies : %s => HTTP заголовок Content-Type начинается с application/json", tc.subDesc), func(t *testing.T) {
 				contentType := resp.Header.Get("Content-Type")
 				if !strings.HasPrefix(contentType, "application/json") {
 					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
