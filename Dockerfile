@@ -12,7 +12,7 @@ COPY . .
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
 RUN go build -o bin/test-runner ./cmd
-RUN go test -o bin/currencyexchange.test -c ./tests/currency_exchange/currency_exchange_test.go
+RUN go test -o bin/currencyexchange.test -c ./tests/currency_exchange
 
 FROM golang:1.26
 
