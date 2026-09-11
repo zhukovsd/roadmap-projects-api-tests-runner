@@ -472,6 +472,109 @@ func postCurrenciesBadRequest(t *testing.T) {
 	}
 }
 
+func TestGetCurrency(t *testing.T) {
+	if len(apiCurrencies) == 0 {
+		t.Skip("Не удалось найти валюту, существующую в API")
+	}
+	reqCurrency := apiCurrencies[0]
+	resp, dumps, err := doRequest(t, http.MethodGet, "/currency/"+reqCurrency.Code, nil)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	injectCode := strings.NewReplacer("{code}", reqCurrency.Code).Replace
+
+	c.assert("status code is 200", injectCode("GET /currency/{code} => HTTP статус код 200"), func(t *testing.T) {
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", injectCode("GET /currency/{code} => HTTP статус код не в диапазоне 300-399 (редиректы)"), func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", injectCode("GET /currency/{code} => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+		}
+	})
+
+	currencyObject, isObject := body.(map[string]any)
+	c.assert("response is json", injectCode("GET /currency/{code} => Тело ответа парсится в JSON объект без ошибок"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Error("Тело ответа не является JSON-объектом")
+		}
+	})
+
+	c.assert("object fields are valid", injectCode("GET /currency/{code} => JSON Объект содержит id, name, code, sign поля"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		valid, reason := isValidCurrency(currencyObject)
+		if !valid {
+			t.Error(reason)
+		}
+	})
+
+	var respCurrency Currency
+	var currencyDecodeErr error
+	c.assert("response body matches expected schema", injectCode("GET /currency/{code} => JSON тело ответа соответствует схеме в ТЗ"), func(t *testing.T) {
+		decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&respCurrency); err != nil {
+			currencyDecodeErr = err
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
+		}
+	})
+
+	c.assert("response echoes requested currency", injectCode("GET /currency/{code} => JSON объект содержит ожидаемые name, code, sign поля"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		if valid, reason := isValidCurrency(currencyObject); !valid {
+			t.Skip(reason)
+		}
+		if currencyDecodeErr != nil {
+			t.Skipf("Тело ответа не соответствует ожидаемой схеме: %s", currencyDecodeErr)
+		}
+		if respCurrency.Code != reqCurrency.Code {
+			t.Errorf("Ожидался код валюты %q, получен %q", reqCurrency.Code, respCurrency.Code)
+		}
+		if respCurrency.Name != reqCurrency.Name {
+			t.Errorf("Ожидалось название валюты %q, получено %q", reqCurrency.Name, respCurrency.Name)
+		}
+		if respCurrency.Sign != reqCurrency.Sign {
+			t.Errorf("Ожидался знак валюты %q, получен %q", reqCurrency.Sign, respCurrency.Sign)
+		}
+	})
+}
+
 func isValidCurrency(c map[string]any) (bool, string) {
 	errors := make([]string, 0)
 	if valid, err := isValidID(c); !valid {
