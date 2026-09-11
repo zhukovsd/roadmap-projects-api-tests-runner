@@ -39,6 +39,7 @@ var testCurrencies []Currency
 var testExchangeRateInputs []ExchangeRateCreateInput
 
 var apiCurrencies []Currency
+var apiExchangeRates []ExchangeRate
 
 func init() {
 	_ = json.Unmarshal(testCurrenciesJSON, &testCurrencies)
@@ -538,6 +539,87 @@ func TestGetCurrency(t *testing.T) {
 		}
 		if respCurrency.Sign != reqCurrency.Sign {
 			t.Errorf("Ожидался знак валюты %q, получен %q", reqCurrency.Sign, respCurrency.Sign)
+		}
+	})
+}
+
+func TestGetExchangeRates(t *testing.T) {
+	resp, dumps, err := doRequest(t, http.MethodGet, "/exchangeRates", nil)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	c.assert("status code is 200", "GET /exchangeRates => HTTP статус код 200", func(t *testing.T) {
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Ожидался код статуса %d, получен %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", "GET /exchangeRates => HTTP статус код не в диапазоне 300-399 (редиректы)", func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный код статуса редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", "GET /exchangeRates => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+		}
+	})
+
+	c.assert("response is valid json", "GET /exchangeRates => Тело ответа парсится в JSON без ошибок", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Errorf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+	})
+
+	exchangeRates, isArray := body.([]any)
+	c.assert("response is json array", "GET /exchangeRates => Тело ответа JSON массив", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isArray {
+			t.Error("Тело ответа не является JSON-массивом")
+		}
+	})
+
+	c.assert("response array elements are valid", "GET /exchangeRates => Объект JSON массива содержит id, baseCurrency, targetCurrency, rate поля", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isArray {
+			t.Skip("Тело ответа не является JSON-массивом")
+		}
+		for _, exchangeRate := range exchangeRates {
+			er, ok := exchangeRate.(map[string]any)
+			if !ok {
+				t.Error("Элемент массива не является JSON-объектом")
+			}
+			if valid, reason := isValidExchangeRate(er); !valid {
+				t.Error(reason)
+			}
+		}
+	})
+
+	c.assert("response body matches expected schema", "GET /exchangeRates => JSON тело ответа соответствует схеме в ТЗ", func(t *testing.T) {
+		decoder := json.NewDecoder(bytes.NewReader(bodyBytes))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&apiExchangeRates); err != nil {
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
 		}
 	})
 }

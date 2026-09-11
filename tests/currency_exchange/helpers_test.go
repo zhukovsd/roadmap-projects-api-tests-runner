@@ -98,6 +98,44 @@ func (c *checker) assert(name string, desc string, fn func(t *testing.T)) {
 	})
 }
 
+func isValidExchangeRate(er map[string]any) (bool, string) {
+	errors := make([]string, 0)
+
+	if valid, err := isValidID(er); !valid {
+		errors = append(errors, err)
+	}
+
+	validateCurrency := func(field string) {
+		f, found := er[field]
+		if !found {
+			errors = append(errors, fmt.Sprintf("Отсутствует поле объекта `%s`", field))
+			return
+		}
+		c, ok := f.(map[string]any)
+		if !ok {
+			errors = append(errors, fmt.Sprintf("Элемент `%s` не является JSON-объектом", field))
+			return
+		}
+		if valid, reason := isValidCurrency(c); !valid {
+			errors = append(errors, reason)
+		}
+	}
+
+	validateCurrency("baseCurrency")
+	validateCurrency("targetCurrency")
+
+	rate, found := er["rate"]
+	if !found {
+		errors = append(errors, "Отсутствует поле объекта `rate`")
+	}
+	_, ok := rate.(float64)
+	if !ok {
+		errors = append(errors, fmt.Sprintf("Поле объекта `rate` не является числом: %q", rate))
+	}
+
+	return len(errors) == 0, strings.Join(errors, "; ")
+}
+
 func isValidCurrency(c map[string]any) (bool, string) {
 	errors := make([]string, 0)
 	if valid, err := isValidID(c); !valid {
