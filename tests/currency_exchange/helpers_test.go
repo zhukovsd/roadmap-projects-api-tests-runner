@@ -156,14 +156,14 @@ func isValidCurrency(c map[string]any) (bool, string) {
 func isValidID(c map[string]any) (bool, string) {
 	id, found := c["id"]
 	if !found {
-		return false, "Отсутствует поле объекта 'id'"
+		return false, "Отсутствует поле объекта `id`"
 	}
 	f, ok := id.(float64)
 	if !ok {
-		return false, fmt.Sprintf("Поле объекта 'id' не является числом: %q", id)
+		return false, fmt.Sprintf("Поле объекта `id` не является числом: %q", id)
 	}
 	if f != math.Trunc(f) {
-		return false, fmt.Sprintf("Поле объекта 'id' не является целым числом: %f", f)
+		return false, fmt.Sprintf("Поле объекта `id` не является целым числом: %f", f)
 	}
 	return true, ""
 }
@@ -171,14 +171,14 @@ func isValidID(c map[string]any) (bool, string) {
 func isValidCode(c map[string]any) (bool, string) {
 	codeAny, found := c["code"]
 	if !found {
-		return false, "Отсутствует поле объекта 'code'"
+		return false, "Отсутствует поле объекта `code`"
 	}
 	codeStr, ok := codeAny.(string)
 	if !ok {
-		return false, "Поле объекта 'code' не является строкой"
+		return false, "Поле объекта `code` не является строкой"
 	}
 	if len(codeStr) != 3 {
-		return false, "Поле объекта 'code' не является допустимым кодом валюты"
+		return false, "Поле объекта `code` не является допустимым кодом валюты"
 	}
 	return true, ""
 }
@@ -186,11 +186,11 @@ func isValidCode(c map[string]any) (bool, string) {
 func isValidStringField(c map[string]any, field string) (bool, string) {
 	n, found := c[field]
 	if !found {
-		return false, fmt.Sprintf("Отсутствует поле объекта '%s'", field)
+		return false, fmt.Sprintf("Отсутствует поле объекта `%s`", field)
 	}
 	_, ok := n.(string)
 	if !ok {
-		return false, fmt.Sprintf("Поле объекта '%s' не является строкой", field)
+		return false, fmt.Sprintf("Поле объекта `%s` не является строкой", field)
 	}
 	return true, ""
 }
