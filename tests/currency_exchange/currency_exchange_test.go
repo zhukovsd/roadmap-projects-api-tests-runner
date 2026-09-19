@@ -792,7 +792,198 @@ func getExchangeRateNotFound(t *testing.T) {
 }
 
 func getExchangeRateBadRequest(t *testing.T) {
+	type testCase struct {
+		name   string
+		desc   string
+		base   string
+		target string
+	}
 
+	var base, target string
+
+	if len(apiExchangeRates) == 0 {
+		t.Logf("Не удалось найти обменный курс, существующий в API, генерируется случайный")
+		base = generateUnusedCurrency().Code
+		target = generateUnusedCurrency().Code
+	}
+
+	testCases := []testCase{
+		{
+			name:   "missing codes",
+			desc:   "коды валют отсутствуют в адресе",
+			base:   "",
+			target: "",
+		},
+		{
+			name:   "one code",
+			desc:   "один код валюты, второй отсутствует",
+			base:   base,
+			target: "",
+		},
+		{
+			name:   "single character",
+			desc:   "один символ вместо двух кодов валют",
+			base:   prefix(base, 1),
+			target: "",
+		},
+		{
+			name:   "both codes too short",
+			desc:   "оба кода валют короче допустимой длины",
+			base:   prefix(base, 2),
+			target: prefix(target, 2),
+		},
+		{
+			name:   "base code too short",
+			desc:   "код базовой валюты короче допустимой длины",
+			base:   prefix(base, 2),
+			target: target,
+		},
+		{
+			name:   "target code too short",
+			desc:   "код целевой валюты короче допустимой длины",
+			base:   base,
+			target: prefix(target, 2),
+		},
+		{
+			name:   "base code too long",
+			desc:   "код базовой валюты превышает допустимую длину",
+			base:   base + prefix(base, 1),
+			target: target,
+		},
+		{
+			name:   "target code too long",
+			desc:   "код целевой валюты превышает допустимую длину",
+			base:   base,
+			target: target + prefix(target, 1),
+		},
+		{
+			name:   "codes too long",
+			desc:   "оба кода валют значительно превышают допустимую длину",
+			base:   strings.Repeat(base, 5),
+			target: strings.Repeat(target, 5),
+		},
+		{
+			name:   "codes with digits",
+			desc:   "коды валют содержат цифры",
+			base:   prefix(base, 2) + "1",
+			target: prefix(target, 2) + "2",
+		},
+		{
+			name:   "codes with special characters",
+			desc:   "коды валют содержат специальные символы",
+			base:   prefix(base, 2) + "-",
+			target: prefix(target, 2) + "-",
+		},
+		{
+			name:   "whitespace only codes",
+			desc:   "коды валют состоят только из пробелов",
+			base:   "   ",
+			target: "   ",
+		},
+		{
+			name:   "lowercase codes",
+			desc:   "оба кода валют в нижнем регистре",
+			base:   strings.ToLower(base),
+			target: strings.ToLower(target),
+		},
+		{
+			name:   "lowercase base code",
+			desc:   "код базовой валюты в нижнем регистре",
+			base:   strings.ToLower(base),
+			target: target,
+		},
+		{
+			name:   "lowercase target code",
+			desc:   "код целевой валюты в нижнем регистре",
+			base:   base,
+			target: strings.ToLower(target),
+		},
+		{
+			name:   "mixed case codes",
+			desc:   "коды валют в смешанном регистре",
+			base:   lowerFirst(base),
+			target: lowerFirst(target),
+		},
+		{
+			name:   "duplicate code",
+			desc:   "базовая и целевая валюты совпадают",
+			base:   base,
+			target: base,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			injectCodes := strings.NewReplacer(
+				"{base}", tc.base,
+				"{target}", tc.target,
+			).Replace
+
+			resp, dumps, err := doRequest(
+				t,
+				http.MethodGet,
+				injectCodes("/exchangeRate/{base}{target}"),
+				nil,
+			)
+
+			var bodyBytes []byte
+			var body any
+			var decodeErr error
+
+			if err != nil {
+				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+			} else {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			descPrefix := fmt.Sprintf(injectCodes("GET /exchangeRate/{base}{target} : %s =>"), tc.desc)
+
+			c.assert("status code is 400", fmt.Sprintf("%s HTTP статус код 400", descPrefix), func(t *testing.T) {
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
+				}
+			})
+			c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			error, isObject := body.(map[string]any)
+			c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(error, "message")
+				if !valid {
+					t.Error(reason)
+				}
+			})
+		})
+	}
 }
 
 func fatalf(t *testing.T, format string, args ...any) {

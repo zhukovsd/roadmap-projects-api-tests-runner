@@ -307,3 +307,17 @@ func isValidStringField(c map[string]any, field string) (bool, string) {
 	}
 	return true, ""
 }
+
+func prefix(s string, n int) string {
+	if len(s) < n {
+		return s
+	}
+	return s[:n]
+}
+
+func lowerFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	return strings.ToLower(s[:1]) + s[1:]
+}
