@@ -7,13 +7,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/zhukovsd/roadmap-projects-api-test-runner/tests"
 )
@@ -21,13 +19,6 @@ import (
 var baseURL = flag.String("base-url", "http://to_be_provided:8080", "API base URL to test")
 var dryRun = flag.Bool("dry-run", false, "Dry run mode, do not actually run tests")
 var fatalErrorOccurred = false
-
-var client = &http.Client{
-	Timeout: 30 * time.Second,
-	CheckRedirect: func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	},
-}
 
 //go:embed testdata/currencies.json
 var testCurrenciesJSON []byte
@@ -714,50 +705,6 @@ func TestGetExchangeRate(t *testing.T) {
 		}
 		mustMatchExchangeRates(t, respExchangeRate, reqExchangeRate)
 	})
-}
-
-func findUnusedCurrency() (Currency, error) {
-	for _, test := range testCurrencies {
-		used := false
-		for _, avail := range apiCurrencies {
-			if avail.Code == test.Code {
-				used = true
-				break
-			}
-		}
-		if !used {
-			return test, nil
-		}
-	}
-	return Currency{}, fmt.Errorf("no unused currencies found")
-}
-
-func generateUnusedCurrency() Currency {
-	letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-	var currency Currency
-uniqueCurrencies:
-	for {
-		codeBytes := make([]byte, 3)
-		for i := range codeBytes {
-			codeBytes[i] = letters[rand.Intn(len(letters))]
-		}
-		code := string(codeBytes)
-
-		for _, avail := range apiCurrencies {
-			if avail.Code == code {
-				continue uniqueCurrencies
-			}
-		}
-
-		currency.Sign = string(code[0])
-		currency.Code = code
-		currency.Name = "Test currency " + code
-
-		break
-	}
-
-	return currency
 }
 
 func fatalf(t *testing.T, format string, args ...any) {

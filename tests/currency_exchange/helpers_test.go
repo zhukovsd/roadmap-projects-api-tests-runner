@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"math/rand"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/zhukovsd/roadmap-projects-api-test-runner/tests"
 )
@@ -22,6 +24,13 @@ type checker struct {
 	t     *testing.T
 	dumps *dumps
 	err   error
+}
+
+var client = &http.Client{
+	Timeout: 30 * time.Second,
+	CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	},
 }
 
 type Currency struct {
@@ -96,6 +105,50 @@ func (c *checker) assert(name string, desc string, fn func(t *testing.T)) {
 		}
 		fn(t)
 	})
+}
+
+func findUnusedCurrency() (Currency, error) {
+	for _, test := range testCurrencies {
+		used := false
+		for _, avail := range apiCurrencies {
+			if avail.Code == test.Code {
+				used = true
+				break
+			}
+		}
+		if !used {
+			return test, nil
+		}
+	}
+	return Currency{}, fmt.Errorf("no unused currencies found")
+}
+
+func generateUnusedCurrency() Currency {
+	letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	var currency Currency
+uniqueCurrencies:
+	for {
+		codeBytes := make([]byte, 3)
+		for i := range codeBytes {
+			codeBytes[i] = letters[rand.Intn(len(letters))]
+		}
+		code := string(codeBytes)
+
+		for _, avail := range apiCurrencies {
+			if avail.Code == code {
+				continue uniqueCurrencies
+			}
+		}
+
+		currency.Sign = string(code[0])
+		currency.Code = code
+		currency.Name = "Test currency " + code
+
+		break
+	}
+
+	return currency
 }
 
 func mustMatchCurrencies(t *testing.T, got, want Currency) {
