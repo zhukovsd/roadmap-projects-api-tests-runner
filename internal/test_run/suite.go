@@ -1,6 +1,7 @@
 package testrun
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -57,7 +58,7 @@ func newTestSuite(project TestRunProjectName, deployBaseURL string) (*Suite, err
 }
 
 func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
-	stdout, err := s.runTestBin(ctx, runOpts{IsDryRun: false})
+	stdout, wait, err := s.runTestBin(ctx, runOpts{IsDryRun: false})
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test binary: %w", err)
 	}
@@ -67,6 +68,9 @@ func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to scan test output: %w", err)
+	}
+	if err := wait(); err != nil {
+		return []TestResult{}, fmt.Errorf("test binary failed: %w", err)
 	}
 	pkg := exe.Package(s.pkgName)
 
@@ -109,13 +113,17 @@ func (s *Suite) total(ctx context.Context) (int, error) {
 	}
 	totalCacheMu.Unlock()
 
-	stdout, err := s.runTestBin(ctx, runOpts{IsDryRun: true})
+	stdout, wait, err := s.runTestBin(ctx, runOpts{IsDryRun: true})
 	if err != nil {
 		return 0, fmt.Errorf("failed to run test binary: %w", err)
 	}
 	exe, err := testjson.ScanTestOutput(testjson.ScanConfig{Stdout: stdout})
 	if err != nil {
 		return 0, fmt.Errorf("failed to scan test output: %w", err)
+	}
+
+	if err := wait(); err != nil {
+		return 0, fmt.Errorf("test binary failed: %w", err)
 	}
 
 	total := 0
@@ -132,7 +140,7 @@ func (s *Suite) total(ctx context.Context) (int, error) {
 	return total, nil
 }
 
-func (s *Suite) runTestBin(ctx context.Context, opts runOpts) (io.ReadCloser, error) {
+func (s *Suite) runTestBin(ctx context.Context, opts runOpts) (io.ReadCloser, func() error, error) {
 	testCmd := exec.CommandContext(
 		ctx,
 		fmt.Sprintf("./%s", s.testBin),
@@ -142,23 +150,45 @@ func (s *Suite) runTestBin(ctx context.Context, opts runOpts) (io.ReadCloser, er
 	)
 	jsonCmd := exec.CommandContext(ctx, "go", "tool", "test2json", "-t", "-p", s.pkgName)
 
+	var stderr bytes.Buffer
+	testCmd.Stderr = &stderr
+
 	testStdout, err := testCmd.StdoutPipe()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get test command stdout pipe: %w", err)
+		return nil, nil, fmt.Errorf("failed to get test stdout pipe: %w", err)
 	}
 	jsonCmd.Stdin = testStdout
 
 	jsonStdout, err := jsonCmd.StdoutPipe()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get json command stdout pipe: %w", err)
+		return nil, nil, fmt.Errorf("failed to get json stdout pipe: %w", err)
 	}
 	if err := testCmd.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start test binary command: %w", err)
+		return nil, nil, fmt.Errorf("failed to start test binary: %w", err)
 	}
 	if err := jsonCmd.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start go tool json command: %w", err)
+		_ = testCmd.Process.Kill()
+		_ = testCmd.Wait()
+		return nil, nil, fmt.Errorf("failed to start test2json: %w", err)
 	}
-	return jsonStdout, nil
+
+	wait := func() error {
+		jsonErr := jsonCmd.Wait()
+		testErr := testCmd.Wait()
+
+		if testErr != nil {
+			if strings.Contains(stderr.String(), "panic") {
+				return fmt.Errorf("test binary failed: %w\nstderr:\n%s", testErr, stderr.String())
+			}
+		}
+		if jsonErr != nil {
+			return fmt.Errorf("test2json failed: %w", jsonErr)
+		}
+
+		return nil
+	}
+
+	return jsonStdout, wait, nil
 }
 
 func (h *progressHandler) Event(event testjson.TestEvent, execution *testjson.Execution) error {
