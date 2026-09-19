@@ -259,7 +259,7 @@ func postCurrenciesSuccess(t *testing.T) {
 }
 
 func postCurrenciesConflict(t *testing.T) {
-	if len(apiCurrencies) == 0 {
+	if !*dryRun && len(apiCurrencies) == 0 {
 		t.Skip("Не удалось найти валюту, вызывающую конфликт")
 	}
 	currency := apiCurrencies[0]
@@ -432,10 +432,14 @@ func postCurrenciesBadRequest(t *testing.T) {
 }
 
 func TestGetCurrency(t *testing.T) {
-	if len(apiCurrencies) == 0 {
-		t.Skip("Не удалось найти валюту, существующую в API")
+	var reqCurrency Currency
+
+	if !*dryRun {
+		if len(apiCurrencies) == 0 {
+			t.Skip("Не удалось найти валюту, существующую в API")
+		}
+		reqCurrency = apiCurrencies[0]
 	}
-	reqCurrency := apiCurrencies[0]
 
 	injectCode := strings.NewReplacer("{code}", reqCurrency.Code).Replace
 
@@ -615,10 +619,14 @@ func TestGetExchangeRate(t *testing.T) {
 }
 
 func getExchangeRateSuccess(t *testing.T) {
-	if len(apiExchangeRates) == 0 {
-		t.Skip("Не удалось найти обменный курс, существующий в API")
+	var reqExchangeRate ExchangeRate
+
+	if !*dryRun {
+		if len(apiExchangeRates) == 0 {
+			t.Skip("Не удалось найти обменный курс, существующий в API")
+		}
+		reqExchangeRate = apiExchangeRates[0]
 	}
-	reqExchangeRate := apiExchangeRates[0]
 
 	injectCodes := strings.NewReplacer(
 		"{base}", reqExchangeRate.BaseCurrency.Code,
@@ -716,7 +724,7 @@ func getExchangeRateSuccess(t *testing.T) {
 func getExchangeRateNotFound(t *testing.T) {
 	base, target, err := findUnusedExchangeRate()
 
-	if err != nil {
+	if !*dryRun && err != nil {
 		t.Skip("Не удалось найти обменный курс, несуществующий в API")
 	}
 
