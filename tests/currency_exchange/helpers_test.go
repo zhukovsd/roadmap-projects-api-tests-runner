@@ -151,6 +151,27 @@ uniqueCurrencies:
 	return currency
 }
 
+func findUnusedExchangeRate() (baseCode, targetCode string, err error) {
+	existingRates := make(map[string]bool)
+
+	for _, rate := range apiExchangeRates {
+		existingRates[rate.BaseCurrency.Code+rate.TargetCurrency.Code] = true
+	}
+
+	for _, base := range apiCurrencies {
+		for _, target := range apiCurrencies {
+			if target.Code == base.Code {
+				continue
+			}
+			if _, found := existingRates[base.Code+target.Code]; !found {
+				return base.Code, target.Code, nil
+			}
+		}
+	}
+
+	return "", "", fmt.Errorf("no unused exchange rates found")
+}
+
 func mustMatchCurrencies(t *testing.T, got, want Currency) {
 	t.Helper()
 

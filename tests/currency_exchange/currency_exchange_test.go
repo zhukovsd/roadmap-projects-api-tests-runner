@@ -609,6 +609,12 @@ func TestGetExchangeRates(t *testing.T) {
 }
 
 func TestGetExchangeRate(t *testing.T) {
+	t.Run("success", getExchangeRateSuccess)
+	t.Run("not found", getExchangeRateNotFound)
+	t.Run("bad request", getExchangeRateBadRequest)
+}
+
+func getExchangeRateSuccess(t *testing.T) {
 	if len(apiExchangeRates) == 0 {
 		t.Skip("Не удалось найти обменный курс, существующий в API")
 	}
@@ -705,6 +711,80 @@ func TestGetExchangeRate(t *testing.T) {
 		}
 		mustMatchExchangeRates(t, respExchangeRate, reqExchangeRate)
 	})
+}
+
+func getExchangeRateNotFound(t *testing.T) {
+	base, target, err := findUnusedExchangeRate()
+
+	if err != nil {
+		t.Skip("Не удалось найти обменный курс, несуществующий в API")
+	}
+
+	injectCodes := strings.NewReplacer("{base}", base, "{target}", target).Replace
+
+	resp, dumps, err := doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	c.assert("status code is 404", injectCodes("GET /exchangeRate/{base}{target} : несуществующий курс => HTTP статус код 404"), func(t *testing.T) {
+		if resp.StatusCode != http.StatusNotFound {
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusNotFound, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", injectCodes("GET /exchangeRate/{base}{target} : несуществующий курс => HTTP статус код не в диапазоне 300-399 (редиректы)"), func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", injectCodes("GET /exchangeRate/{base}{target} : несуществующий курс => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, injectCodes("application/json")) {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", injectCodes("application/json"), contentType)
+		}
+	})
+
+	error, isObject := body.(map[string]any)
+	c.assert("response is json", injectCodes("GET /exchangeRate/{base}{target} : несуществующий курс => Тело ответа парсится в JSON объект без ошибок"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Error("Тело ответа не является JSON-объектом")
+		}
+	})
+
+	c.assert("response contains field message", injectCodes("GET /exchangeRate/{base}{target} : несуществующий курс => JSON объект содержит поле message"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		valid, reason := isValidStringField(error, "message")
+		if !valid {
+			t.Error(reason)
+		}
+	})
+}
+
+func getExchangeRateBadRequest(t *testing.T) {
+
 }
 
 func fatalf(t *testing.T, format string, args ...any) {
