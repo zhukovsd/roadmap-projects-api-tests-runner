@@ -82,7 +82,7 @@ func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
 				continue
 			}
 			results = append(results, TestResult{
-				Name:        tc.Test.Name(),
+				Name:        stripMasterPrefix(tc.Test.Name()),
 				Status:      status,
 				Output:      cleanOutput(pkg.OutputLines(tc)),
 				Description: tc.Attributes[tests.TestDescriptionAttr],
@@ -321,6 +321,7 @@ func extractResponse(lines []string) string {
 	return strings.Join(out, "\n")
 }
 
+// helper_test.go:42: some message -> some message
 func stripCallerPrefix(line string) string {
 	_, after, ok := strings.Cut(line, ".go:")
 	if !ok {
@@ -331,4 +332,11 @@ func stripCallerPrefix(line string) string {
 		return line
 	}
 	return strings.TrimPrefix(after, " ")
+}
+
+func stripMasterPrefix(testName string) string {
+	if after, found := strings.CutPrefix(testName, "TestMaster/"); found {
+		return after
+	}
+	return testName
 }

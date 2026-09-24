@@ -321,3 +321,9 @@ func lowerFirst(s string) string {
 	}
 	return strings.ToLower(s[:1]) + s[1:]
 }
+
+func fatalf(t *testing.T, format string, args ...any) {
+	t.Helper()
+	fatalErrorOccurred = true
+	t.Fatalf(format, args...)
+}
