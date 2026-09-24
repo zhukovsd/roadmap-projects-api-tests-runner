@@ -45,6 +45,7 @@ func TestMaster(t *testing.T) {
 
 	t.Run("exchange rates", func(t *testing.T) {
 		t.Run("get", getExchangeRates)
+		t.Run("post", postExchangeRates)
 	})
 	t.Run("exchange rate", func(t *testing.T) {
 		t.Run("get", getExchangeRate)

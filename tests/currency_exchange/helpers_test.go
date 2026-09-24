@@ -107,7 +107,7 @@ func (c *checker) assert(name string, desc string, fn func(t *testing.T)) {
 	})
 }
 
-func findUnusedCurrency() (Currency, error) {
+func findOrGenerateUnusedCurrency() Currency {
 	for _, test := range testCurrencies {
 		used := false
 		for _, avail := range apiCurrencies {
@@ -117,13 +117,14 @@ func findUnusedCurrency() (Currency, error) {
 			}
 		}
 		if !used {
-			return test, nil
+			return test
 		}
 	}
-	return Currency{}, fmt.Errorf("no unused currencies found")
+
+	return generateRandomCurrency()
 }
 
-func generateUnusedCurrency() Currency {
+func generateRandomCurrency() Currency {
 	letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 	var currency Currency
@@ -151,11 +152,25 @@ uniqueCurrencies:
 	return currency
 }
 
-func findUnusedExchangeRate() (baseCode, targetCode string, err error) {
-	existingRates := make(map[string]bool)
+func findUsedCurrency() (Currency, error) {
+	if len(apiCurrencies) == 0 {
+		if *dryRun {
+			return Currency{}, nil
+		}
+		return Currency{}, fmt.Errorf("no used currencies found")
+	}
+	return apiCurrencies[0], nil
+}
+
+func findUnusedExchangeRate() (ExchangeRate, error) {
+	if *dryRun {
+		return ExchangeRate{}, nil
+	}
+
+	existingRates := make(map[string]ExchangeRate)
 
 	for _, rate := range apiExchangeRates {
-		existingRates[rate.BaseCurrency.Code+rate.TargetCurrency.Code] = true
+		existingRates[rate.BaseCurrency.Code+rate.TargetCurrency.Code] = rate
 	}
 
 	for _, base := range apiCurrencies {
@@ -164,12 +179,22 @@ func findUnusedExchangeRate() (baseCode, targetCode string, err error) {
 				continue
 			}
 			if _, found := existingRates[base.Code+target.Code]; !found {
-				return base.Code, target.Code, nil
+				return ExchangeRate{BaseCurrency: base, TargetCurrency: target}, nil
 			}
 		}
 	}
 
-	return "", "", fmt.Errorf("no unused exchange rates found")
+	return ExchangeRate{}, fmt.Errorf("no unused exchange rates found")
+}
+
+func findUsedExchangeRate() (ExchangeRate, error) {
+	if len(apiExchangeRates) == 0 {
+		if *dryRun {
+			return ExchangeRate{322, Currency{}, Currency{}, 0.333333}, nil
+		}
+		return ExchangeRate{}, fmt.Errorf("no used exchange rates found")
+	}
+	return apiExchangeRates[0], nil
 }
 
 func mustMatchCurrencies(t *testing.T, got, want Currency) {

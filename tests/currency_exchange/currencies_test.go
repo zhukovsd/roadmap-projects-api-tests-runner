@@ -99,13 +99,9 @@ func getCurrency(t *testing.T) {
 }
 
 func getCurrencySuccess(t *testing.T) {
-	var reqCurrency Currency
-
-	if !*dryRun {
-		if len(apiCurrencies) == 0 {
-			t.Skip("Не удалось найти валюту, существующую в API")
-		}
-		reqCurrency = apiCurrencies[0]
+	reqCurrency, err := findUsedCurrency()
+	if err != nil {
+		t.Skip("Не удалось найти валюту, существующую в API")
 	}
 
 	injectCode := strings.NewReplacer("{code}", reqCurrency.Code).Replace
@@ -199,11 +195,7 @@ func getCurrencySuccess(t *testing.T) {
 }
 
 func getCurrencyNotFound(t *testing.T) {
-	currency, err := findUnusedCurrency()
-	if err != nil {
-		t.Logf("Не удалось найти реальную валюту, отсутствующую в API, генерируется случайная")
-		currency = generateUnusedCurrency()
-	}
+	currency := findOrGenerateUnusedCurrency()
 
 	injectCode := strings.NewReplacer("{code}", currency.Code).Replace
 
@@ -275,17 +267,7 @@ func getCurrencyBadRequest(t *testing.T) {
 		code string
 	}
 
-	var code string
-
-	if len(apiCurrencies) != 0 {
-		code = apiCurrencies[0].Code
-	} else {
-		t.Logf("Не удалось найти валюту, существующую в API, генерируется случайная")
-		code = generateUnusedCurrency().Code
-	}
-	if *dryRun {
-		code = "XDD"
-	}
+	code := findOrGenerateUnusedCurrency().Code
 
 	lowerCode := strings.ToLower(code)
 	mixedCode := strings.ToLower(code[:1]) + code[1:]
@@ -416,11 +398,7 @@ func postCurrencies(t *testing.T) {
 }
 
 func postCurrenciesSuccess(t *testing.T) {
-	reqCurrency, err := findUnusedCurrency()
-	if err != nil {
-		t.Logf("Не удалось найти реальную валюту для вставки, генерируется случайная")
-		reqCurrency = generateUnusedCurrency()
-	}
+	reqCurrency := findOrGenerateUnusedCurrency()
 
 	form := url.Values{"code": {reqCurrency.Code}, "sign": {reqCurrency.Sign}, "name": {reqCurrency.Name}}
 	resp, dumps, err := doRequest(t, http.MethodPost, "/currencies", &form)
@@ -516,10 +494,10 @@ func postCurrenciesSuccess(t *testing.T) {
 }
 
 func postCurrenciesConflict(t *testing.T) {
-	if !*dryRun && len(apiCurrencies) == 0 {
+	currency, err := findUsedCurrency()
+	if err != nil {
 		t.Skip("Не удалось найти валюту, вызывающую конфликт")
 	}
-	currency := apiCurrencies[0]
 
 	form := url.Values{"code": {currency.Code}, "sign": {currency.Sign}, "name": {currency.Name}}
 	resp, dumps, err := doRequest(t, http.MethodPost, "/currencies", &form)
@@ -579,11 +557,7 @@ func postCurrenciesConflict(t *testing.T) {
 }
 
 func postCurrenciesBadRequest(t *testing.T) {
-	currency, err := findUnusedCurrency()
-	if err != nil {
-		t.Logf("Не удалось найти реальную валюту для вставки, генерируется случайная")
-		currency = generateUnusedCurrency()
-	}
+	currency := findOrGenerateUnusedCurrency()
 
 	testCases := []struct {
 		subName string

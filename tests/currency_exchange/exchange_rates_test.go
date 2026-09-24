@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -98,13 +100,9 @@ func getExchangeRate(t *testing.T) {
 }
 
 func getExchangeRateSuccess(t *testing.T) {
-	var reqExchangeRate ExchangeRate
-
-	if !*dryRun {
-		if len(apiExchangeRates) == 0 {
-			t.Skip("Не удалось найти обменный курс, существующий в API")
-		}
-		reqExchangeRate = apiExchangeRates[0]
+	reqExchangeRate, err := findUsedExchangeRate()
+	if err != nil {
+		t.Skip("Не удалось найти обменный курс, существующий в API")
 	}
 
 	injectCodes := strings.NewReplacer(
@@ -144,8 +142,8 @@ func getExchangeRateSuccess(t *testing.T) {
 	})
 	c.assert("content type is json", injectCodes("GET /exchangeRate/{base}{target} => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
 		contentType := resp.Header.Get("Content-Type")
-		if !strings.HasPrefix(contentType, injectCodes("application/json")) {
-			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", injectCodes("application/json"), contentType)
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 		}
 	})
 
@@ -190,7 +188,7 @@ func getExchangeRateSuccess(t *testing.T) {
 		if !isObject {
 			t.Skip("Тело ответа не является JSON-объектом")
 		}
-		if valid, reason := isValidCurrency(exchangeRateObject); !valid {
+		if valid, reason := isValidExchangeRate(exchangeRateObject); !valid {
 			t.Skip(reason)
 		}
 		if exchangeRateDecodeErr != nil {
@@ -201,13 +199,15 @@ func getExchangeRateSuccess(t *testing.T) {
 }
 
 func getExchangeRateNotFound(t *testing.T) {
-	base, target, err := findUnusedExchangeRate()
-
-	if !*dryRun && err != nil {
+	exchangeRate, err := findUnusedExchangeRate()
+	if err != nil {
 		t.Skip("Не удалось найти обменный курс, несуществующий в API")
 	}
 
-	injectCodes := strings.NewReplacer("{base}", base, "{target}", target).Replace
+	injectCodes := strings.NewReplacer(
+		"{base}", exchangeRate.BaseCurrency.Code,
+		"{target}", exchangeRate.TargetCurrency.Code,
+	).Replace
 
 	resp, dumps, err := doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
 
@@ -241,8 +241,8 @@ func getExchangeRateNotFound(t *testing.T) {
 	})
 	c.assert("content type is json", injectCodes("GET /exchangeRate/{base}{target} : несуществующий курс => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
 		contentType := resp.Header.Get("Content-Type")
-		if !strings.HasPrefix(contentType, injectCodes("application/json")) {
-			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", injectCodes("application/json"), contentType)
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 		}
 	})
 
@@ -278,13 +278,8 @@ func getExchangeRateBadRequest(t *testing.T) {
 		target string
 	}
 
-	var base, target string
-
-	if len(apiExchangeRates) == 0 {
-		t.Logf("Не удалось найти обменный курс, существующий в API, генерируется случайный")
-		base = generateUnusedCurrency().Code
-		target = generateUnusedCurrency().Code
-	}
+	base := findOrGenerateUnusedCurrency().Code
+	target := findOrGenerateUnusedCurrency().Code
 
 	testCases := []testCase{
 		{
@@ -450,6 +445,437 @@ func getExchangeRateBadRequest(t *testing.T) {
 			})
 
 			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(error, "message")
+				if !valid {
+					t.Error(reason)
+				}
+			})
+		})
+	}
+}
+
+func postExchangeRates(t *testing.T) {
+	t.Run("success", postExchangeRatesSuccess)
+	t.Run("conflict", postExchangeRatesConflict)
+	t.Run("bad request", postExchangeRatesBadRequest)
+	t.Run("not found", postExchangeRatesNotFound)
+}
+
+func postExchangeRatesSuccess(t *testing.T) {
+	reqExchangeRate, err := findUnusedExchangeRate()
+	if err != nil {
+		t.Skip("Не удалось найти обменный курс для вставки")
+	}
+	reqRate := 0.5
+
+	form := url.Values{
+		"baseCurrencyCode":   {reqExchangeRate.BaseCurrency.Code},
+		"targetCurrencyCode": {reqExchangeRate.TargetCurrency.Code},
+		"rate":               {strconv.FormatFloat(reqRate, 'f', 2, 64)},
+	}
+	resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &form)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	c.assert("status code is 201", "POST /exchangeRates => HTTP статус код 201", func(t *testing.T) {
+		if resp.StatusCode != http.StatusCreated {
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusCreated, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", "POST /exchangeRates => HTTP статус код не в диапазоне 300-399 (редиректы)", func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", "POST /exchangeRates => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+		}
+	})
+
+	exchangeRateObject, isObject := body.(map[string]any)
+	c.assert("response is json", "POST /exchangeRates => Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Error("Тело ответа не является JSON-объектом")
+		}
+	})
+
+	c.assert("object fields are valid", "POST /exchangeRates => JSON Объект содержит id, baseCurrency, targetCurrency, rate поля", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		valid, reason := isValidExchangeRate(exchangeRateObject)
+		if !valid {
+			t.Error(reason)
+		}
+	})
+
+	var respExchangeRate ExchangeRate
+	var exchangeRateDecodeErr error
+	c.assert("response body matches expected schema", "POST /exchangeRates => JSON тело ответа соответствует схеме в ТЗ", func(t *testing.T) {
+		decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&respExchangeRate); err != nil {
+			exchangeRateDecodeErr = err
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
+		}
+	})
+
+	c.assert("response echoes requested exchange rate", "POST /exchangeRates => JSON объект содержит ожидаемые id, baseCurrency, targetCurrency, rate поля", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		if valid, reason := isValidExchangeRate(exchangeRateObject); !valid {
+			t.Skip(reason)
+		}
+		if exchangeRateDecodeErr != nil {
+			t.Skipf("Тело ответа не соответствует ожидаемой схеме: %s", exchangeRateDecodeErr)
+		}
+		reqExchangeRate := ExchangeRate{
+			ID:             respExchangeRate.ID,
+			BaseCurrency:   reqExchangeRate.BaseCurrency,
+			TargetCurrency: reqExchangeRate.TargetCurrency,
+			Rate:           reqRate,
+		}
+		mustMatchExchangeRates(t, respExchangeRate, reqExchangeRate)
+	})
+
+	apiExchangeRates = append(apiExchangeRates, respExchangeRate)
+}
+
+func postExchangeRatesConflict(t *testing.T) {
+	reqExchangeRate, err := findUsedExchangeRate()
+	if err != nil {
+		t.Skip("Не удалось найти обменный курс, вызывающий конфликт")
+	}
+
+	form := url.Values{
+		"baseCurrencyCode":   {reqExchangeRate.BaseCurrency.Code},
+		"targetCurrencyCode": {reqExchangeRate.TargetCurrency.Code},
+		"rate":               {strconv.FormatFloat(reqExchangeRate.Rate, 'f', 2, 64)},
+	}
+	resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &form)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	c.assert("status code is 409", "POST /exchangeRates : существующий обменный курс => HTTP статус код 409", func(t *testing.T) {
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusConflict, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", "POST /exchangeRates : существующий обменный курс => HTTP статус код не в диапазоне 300-399 (редиректы)", func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", "POST /exchangeRates : существующий обменный курс => HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+		}
+	})
+
+	error, isObject := body.(map[string]any)
+	c.assert("response is json", "POST /exchangeRates : существующий обменный курс => Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Error("Тело ответа не является JSON-объектом")
+		}
+	})
+
+	c.assert("response contains field message", "POST /exchangeRates : существующий обменный курс => JSON объект содержит поле message", func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		valid, reason := isValidStringField(error, "message")
+		if !valid {
+			t.Error(reason)
+		}
+	})
+}
+
+func postExchangeRatesBadRequest(t *testing.T) {
+	base := findOrGenerateUnusedCurrency().Code
+	target := findOrGenerateUnusedCurrency().Code
+	rate := "0.5"
+
+	type testCase struct {
+		subName string
+		subDesc string
+		form    url.Values
+	}
+
+	testCases := []testCase{
+		{
+			subName: "missing base currency code",
+			subDesc: "отсутствует параметр baseCurrencyCode",
+			form:    url.Values{"targetCurrencyCode": {target}, "rate": {rate}},
+		},
+		{
+			subName: "blank base currency code",
+			subDesc: "параметр baseCurrencyCode пустой",
+			form:    url.Values{"baseCurrencyCode": {""}, "targetCurrencyCode": {target}, "rate": {rate}},
+		},
+		{
+			subName: "missing target currency code",
+			subDesc: "отсутствует параметр targetCurrencyCode",
+			form:    url.Values{"baseCurrencyCode": {base}, "rate": {rate}},
+		},
+		{
+			subName: "blank target currency code",
+			subDesc: "параметр targetCurrencyCode пустой",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {""}, "rate": {rate}},
+		},
+		{
+			subName: "missing rate",
+			subDesc: "отсутствует параметр rate",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target}},
+		},
+		{
+			subName: "blank rate",
+			subDesc: "параметр rate пустой",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target}, "rate": {""}},
+		},
+		{
+			subName: "non-numeric rate",
+			subDesc: "параметр rate не является числом",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target}, "rate": {"abc"}},
+		},
+		{
+			subName: "negative rate",
+			subDesc: "параметр rate отрицательный",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target}, "rate": {"-0.50"}},
+		},
+		{
+			subName: "zero rate",
+			subDesc: "параметр rate равен нулю",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target}, "rate": {"0"}},
+		},
+		{
+			subName: "base currency code too short",
+			subDesc: "параметр baseCurrencyCode короче допустимой длины",
+			form:    url.Values{"baseCurrencyCode": {base[:2]}, "targetCurrencyCode": {target}, "rate": {rate}},
+		},
+		{
+			subName: "base currency code too long",
+			subDesc: "параметр baseCurrencyCode превышает допустимую длину",
+			form:    url.Values{"baseCurrencyCode": {base + base}, "targetCurrencyCode": {target}, "rate": {rate}},
+		},
+		{
+			subName: "target currency code too short",
+			subDesc: "параметр targetCurrencyCode короче допустимой длины",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target[:2]}, "rate": {rate}},
+		},
+		{
+			subName: "target currency code too long",
+			subDesc: "параметр targetCurrencyCode превышает допустимую длину",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {target + target}, "rate": {rate}},
+		},
+		{
+			subName: "same base and target currency code",
+			subDesc: "базовая и целевая валюты совпадают",
+			form:    url.Values{"baseCurrencyCode": {base}, "targetCurrencyCode": {base}, "rate": {rate}},
+		},
+		{
+			subName: "lowercase currency codes",
+			subDesc: "коды валют в нижнем регистре",
+			form:    url.Values{"baseCurrencyCode": {strings.ToLower(base)}, "targetCurrencyCode": {strings.ToLower(target)}, "rate": {rate}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.subName, func(t *testing.T) {
+			t.Parallel()
+			resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &tc.form)
+
+			var bodyBytes []byte
+			var body any
+			var decodeErr error
+
+			if err != nil {
+				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+			} else {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			c.assert("status code is 400", fmt.Sprintf("POST /exchangeRates : %s => HTTP статус код 400", tc.subDesc), func(t *testing.T) {
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
+				}
+			})
+			c.assert("content type is json", fmt.Sprintf("POST /exchangeRates : %s => HTTP заголовок Content-Type начинается с application/json", tc.subDesc), func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			error, isObject := body.(map[string]any)
+			c.assert("response is json", fmt.Sprintf("POST /exchangeRates : %s => Тело ответа парсится в JSON объект без ошибок", tc.subDesc), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", fmt.Sprintf("POST /exchangeRates : %s => JSON объект содержит поле message", tc.subDesc), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(error, "message")
+				if !valid {
+					t.Error(reason)
+				}
+			})
+		})
+	}
+}
+
+func postExchangeRatesNotFound(t *testing.T) {
+	c, err := findUsedCurrency()
+	if err != nil {
+		t.Skip("Не удалось найти валюту существующую в API")
+	}
+	existing := c.Code
+	missing := findOrGenerateUnusedCurrency().Code
+	rate := "0.50"
+
+	type testCase struct {
+		subName string
+		subDesc string
+		form    url.Values
+	}
+
+	testCases := []testCase{
+		{
+			subName: "unknown base currency code",
+			subDesc: "код базовой валюты не существует в системе",
+			form:    url.Values{"baseCurrencyCode": {missing}, "targetCurrencyCode": {existing}, "rate": {rate}},
+		},
+		{
+			subName: "unknown target currency code",
+			subDesc: "код целевой валюты не существует в системе",
+			form:    url.Values{"baseCurrencyCode": {existing}, "targetCurrencyCode": {missing}, "rate": {rate}},
+		},
+		{
+			subName: "unknown base and target currency code",
+			subDesc: "код базовой и целевой валюты не существует в системе",
+			form:    url.Values{"baseCurrencyCode": {missing}, "targetCurrencyCode": {generateRandomCurrency().Code}, "rate": {rate}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.subName, func(t *testing.T) {
+			t.Parallel()
+			resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &tc.form)
+
+			var bodyBytes []byte
+			var body any
+			var decodeErr error
+
+			if err != nil {
+				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+			} else {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			c.assert("status code is 404", fmt.Sprintf("POST /exchangeRates : %s => HTTP статус код 404", tc.subDesc), func(t *testing.T) {
+				if resp.StatusCode != http.StatusNotFound {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusNotFound, resp.StatusCode)
+				}
+			})
+			c.assert("content type is json", fmt.Sprintf("POST /exchangeRates : %s => HTTP заголовок Content-Type начинается с application/json", tc.subDesc), func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			error, isObject := body.(map[string]any)
+			c.assert("response is json", fmt.Sprintf("POST /exchangeRates : %s => Тело ответа парсится в JSON объект без ошибок", tc.subDesc), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", fmt.Sprintf("POST /exchangeRates : %s => JSON объект содержит поле message", tc.subDesc), func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
