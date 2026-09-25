@@ -559,50 +559,52 @@ func postCurrenciesConflict(t *testing.T) {
 func postCurrenciesBadRequest(t *testing.T) {
 	currency := findOrGenerateUnusedCurrency()
 
-	testCases := []struct {
-		subName string
-		subDesc string
-		form    url.Values
-	}{
+	type testCase struct {
+		name string
+		desc string
+		form url.Values
+	}
+
+	testCases := []testCase{
 		{
-			subName: "missing name",
-			subDesc: "отсутствует параметр name",
-			form:    url.Values{"code": {currency.Code}, "sign": {currency.Sign}},
+			name: "missing name",
+			desc: "отсутствует параметр name",
+			form: url.Values{"code": {currency.Code}, "sign": {currency.Sign}},
 		},
 		{
-			subName: "blank name",
-			subDesc: "параметр name пустой",
-			form:    url.Values{"code": {currency.Code}, "sign": {currency.Sign}, "name": {""}},
+			name: "blank name",
+			desc: "параметр name пустой",
+			form: url.Values{"code": {currency.Code}, "sign": {currency.Sign}, "name": {""}},
 		},
 		{
-			subName: "missing code",
-			subDesc: "отсутствует параметр code",
-			form:    url.Values{"sign": {currency.Sign}, "name": {currency.Name}},
+			name: "missing code",
+			desc: "отсутствует параметр code",
+			form: url.Values{"sign": {currency.Sign}, "name": {currency.Name}},
 		},
 		{
-			subName: "blank code",
-			subDesc: "параметр code пустой",
-			form:    url.Values{"code": {""}, "sign": {currency.Sign}, "name": {currency.Name}},
+			name: "blank code",
+			desc: "параметр code пустой",
+			form: url.Values{"code": {""}, "sign": {currency.Sign}, "name": {currency.Name}},
 		},
 		{
-			subName: "missing sign",
-			subDesc: "отсутствует параметр sign",
-			form:    url.Values{"code": {currency.Code}, "name": {currency.Name}},
+			name: "missing sign",
+			desc: "отсутствует параметр sign",
+			form: url.Values{"code": {currency.Code}, "name": {currency.Name}},
 		},
 		{
-			subName: "blank sign",
-			subDesc: "параметр sign пустой",
-			form:    url.Values{"code": {currency.Code}, "sign": {""}, "name": {currency.Name}},
+			name: "blank sign",
+			desc: "параметр sign пустой",
+			form: url.Values{"code": {currency.Code}, "sign": {""}, "name": {currency.Name}},
 		},
 		{
-			subName: "code too long",
-			subDesc: "параметр code превышает допустимую длину",
-			form:    url.Values{"code": {currency.Code + currency.Code}, "sign": {currency.Sign}, "name": {currency.Name}},
+			name: "code too long",
+			desc: "параметр code превышает допустимую длину",
+			form: url.Values{"code": {currency.Code + currency.Code}, "sign": {currency.Sign}, "name": {currency.Name}},
 		},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.subName, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			resp, dumps, err := doRequest(t, http.MethodPost, "/currencies", &tc.form)
 
@@ -624,12 +626,12 @@ func postCurrenciesBadRequest(t *testing.T) {
 
 			c := &checker{t, dumps, err}
 
-			c.assert("status code is 400", fmt.Sprintf("POST /currencies : %s => HTTP статус код 400", tc.subDesc), func(t *testing.T) {
+			c.assert("status code is 400", fmt.Sprintf("POST /currencies : %s => HTTP статус код 400", tc.desc), func(t *testing.T) {
 				if resp.StatusCode != http.StatusBadRequest {
 					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
 				}
 			})
-			c.assert("content type is json", fmt.Sprintf("POST /currencies : %s => HTTP заголовок Content-Type начинается с application/json", tc.subDesc), func(t *testing.T) {
+			c.assert("content type is json", fmt.Sprintf("POST /currencies : %s => HTTP заголовок Content-Type начинается с application/json", tc.desc), func(t *testing.T) {
 				contentType := resp.Header.Get("Content-Type")
 				if !strings.HasPrefix(contentType, "application/json") {
 					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
@@ -637,7 +639,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 			})
 
 			error, isObject := body.(map[string]any)
-			c.assert("response is json", fmt.Sprintf("POST /currencies : %s => Тело ответа парсится в JSON объект без ошибок", tc.subDesc), func(t *testing.T) {
+			c.assert("response is json", fmt.Sprintf("POST /currencies : %s => Тело ответа парсится в JSON объект без ошибок", tc.desc), func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
@@ -646,7 +648,7 @@ func postCurrenciesBadRequest(t *testing.T) {
 				}
 			})
 
-			c.assert("response contains field message", fmt.Sprintf("POST /currencies : %s => JSON объект содержит поле message", tc.subDesc), func(t *testing.T) {
+			c.assert("response contains field message", fmt.Sprintf("POST /currencies : %s => JSON объект содержит поле message", tc.desc), func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
