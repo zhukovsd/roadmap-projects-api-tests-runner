@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -797,6 +798,7 @@ func postExchangeRatesBadRequest(t *testing.T) {
 	}
 }
 
+// TODO: normalise testCase struct fields names
 func postExchangeRatesNotFound(t *testing.T) {
 	c, err := findUsedCurrency()
 	if err != nil {
@@ -876,6 +878,462 @@ func postExchangeRatesNotFound(t *testing.T) {
 			})
 
 			c.assert("response contains field message", fmt.Sprintf("POST /exchangeRates : %s => JSON объект содержит поле message", tc.subDesc), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(error, "message")
+				if !valid {
+					t.Error(reason)
+				}
+			})
+		})
+	}
+}
+
+func patchExchangeRate(t *testing.T) {
+	t.Run("success", patchExchangeRateSuccess)
+	t.Run("bad request", patchExchangeRateBadRequest)
+	t.Run("not found", patchExchangeRateNotFound)
+}
+
+func patchExchangeRateSuccess(t *testing.T) {
+	reqExchangeRate, err := findUsedExchangeRate()
+	if err != nil {
+		t.Skip("Не удалось найти обменный курс для обновления")
+	}
+	reqRate := reqExchangeRate.Rate * 10
+
+	injectCodes := strings.NewReplacer(
+		"{base}", reqExchangeRate.BaseCurrency.Code,
+		"{target}", reqExchangeRate.TargetCurrency.Code,
+	).Replace
+
+	form := url.Values{"rate": {strconv.FormatFloat(reqRate, 'f', 2, 64)}}
+	resp, dumps, err := doRequest(t, http.MethodPatch, injectCodes("/exchangeRate/{base}{target}"), &form)
+
+	var bodyBytes []byte
+	var body any
+	var decodeErr error
+
+	if err != nil {
+		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+	} else {
+		defer resp.Body.Close()
+		bodyBytes, err = io.ReadAll(resp.Body)
+		if err != nil {
+			err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+		} else {
+			decodeErr = json.Unmarshal(bodyBytes, &body)
+		}
+	}
+
+	c := &checker{t, dumps, err}
+
+	c.assert("status code is 200", injectCodes("PATCH /exchangeRate/{base}{target} => HTTP статус код 200"), func(t *testing.T) {
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Ожидался статус код %d, получен %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+	c.assert("no redirects", injectCodes("PATCH /exchangeRate/{base}{target} => HTTP статус код не в диапазоне 300-399 (редиректы)"), func(t *testing.T) {
+		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
+		}
+	})
+	c.assert("content type is json", injectCodes("PATCH /exchangeRate/{base}{target} => HTTP заголовок Content-Type начинается с application/json"), func(t *testing.T) {
+		contentType := resp.Header.Get("Content-Type")
+		if !strings.HasPrefix(contentType, "application/json") {
+			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+		}
+	})
+
+	exchangeRateObject, isObject := body.(map[string]any)
+	c.assert("response is json", injectCodes("PATCH /exchangeRate/{base}{target} => Тело ответа парсится в JSON объект без ошибок"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Error("Тело ответа не является JSON-объектом")
+		}
+	})
+
+	c.assert("object fields are valid", injectCodes("PATCH /exchangeRate/{base}{target} => JSON Объект содержит id, baseCurrency, targetCurrency, rate поля"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		valid, reason := isValidExchangeRate(exchangeRateObject)
+		if !valid {
+			t.Error(reason)
+		}
+	})
+
+	var respExchangeRate ExchangeRate
+	var exchangeRateDecodeErr error
+	c.assert("response body matches expected schema", injectCodes("PATCH /exchangeRate/{base}{target} => JSON тело ответа соответствует схеме в ТЗ"), func(t *testing.T) {
+		decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+		decoder.DisallowUnknownFields()
+		if err := decoder.Decode(&respExchangeRate); err != nil {
+			exchangeRateDecodeErr = err
+			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
+		}
+	})
+
+	c.assert("response echoes requested exchange rate", injectCodes("PATCH /exchangeRate/{base}{target} => JSON объект содержит ожидаемые id, baseCurrency, targetCurrency, rate поля"), func(t *testing.T) {
+		if decodeErr != nil {
+			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+		}
+		if !isObject {
+			t.Skip("Тело ответа не является JSON-объектом")
+		}
+		if valid, reason := isValidExchangeRate(exchangeRateObject); !valid {
+			t.Skip(reason)
+		}
+		if exchangeRateDecodeErr != nil {
+			t.Skipf("Тело ответа не соответствует ожидаемой схеме: %s", exchangeRateDecodeErr)
+		}
+		reqExchangeRate := ExchangeRate{
+			ID:             reqExchangeRate.ID,
+			BaseCurrency:   reqExchangeRate.BaseCurrency,
+			TargetCurrency: reqExchangeRate.TargetCurrency,
+			Rate:           reqRate,
+		}
+		mustMatchExchangeRates(t, respExchangeRate, reqExchangeRate)
+	})
+
+	apiExchangeRates = slices.DeleteFunc(apiExchangeRates, func(e ExchangeRate) bool {
+		return e.ID == reqExchangeRate.ID
+	})
+	apiExchangeRates = append(apiExchangeRates, respExchangeRate)
+}
+
+func patchExchangeRateBadRequest(t *testing.T) {
+	type testCase struct {
+		name   string
+		desc   string
+		base   string
+		target string
+		form   url.Values
+	}
+
+	base, target := "USD", "EUR"
+
+	testCases := []testCase{
+		{
+			name:   "missing rate",
+			desc:   "отсутствует параметр rate",
+			base:   base,
+			target: target,
+			form:   url.Values{},
+		},
+		{
+			name:   "blank rate",
+			desc:   "параметр rate пустой",
+			base:   base,
+			target: target,
+			form:   url.Values{"rate": {""}},
+		},
+		{
+			name:   "non-numeric rate",
+			desc:   "параметр rate не является числом",
+			base:   base,
+			target: target,
+			form:   url.Values{"rate": {"abc"}},
+		},
+		{
+			name:   "negative rate",
+			desc:   "параметр rate отрицательный",
+			base:   base,
+			target: target,
+			form:   url.Values{"rate": {"-10.0"}},
+		},
+		{
+			name:   "zero rate",
+			desc:   "параметр rate равен нулю",
+			base:   base,
+			target: target,
+			form:   url.Values{"rate": {"0"}},
+		},
+		{
+			name:   "whitespace only rate",
+			desc:   "параметр rate состоит только из пробелов",
+			base:   base,
+			target: target,
+			form:   url.Values{"rate": {"   "}},
+		},
+		{
+			name:   "same base and target currency",
+			desc:   "базовая и целевая валюты совпадают",
+			base:   base,
+			target: base,
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "missing base code",
+			desc:   "код базовой валюты отсутствует в адресе",
+			base:   "",
+			target: target,
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "missing target code",
+			desc:   "код целевой валюты отсутствует в адресе",
+			base:   base,
+			target: "",
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "single character",
+			desc:   "один символ вместо двух кодов валют",
+			base:   "U",
+			target: "",
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "base code too short",
+			desc:   "код базовой валюты короче допустимой длины",
+			base:   prefix(base, 2),
+			target: target,
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "target code too short",
+			desc:   "код целевой валюты короче допустимой длины",
+			base:   base,
+			target: prefix(target, 2),
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "base code too long",
+			desc:   "код базовой валюты превышает допустимую длину",
+			base:   base + base,
+			target: target,
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "target code too long",
+			desc:   "код целевой валюты превышает допустимую длину",
+			base:   base,
+			target: target + target,
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "codes with digits",
+			desc:   "коды валют содержат цифры",
+			base:   prefix(base, 2) + "1",
+			target: prefix(target, 2) + "2",
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "codes with special characters",
+			desc:   "коды валют содержат специальные символы",
+			base:   prefix(base, 2) + "-",
+			target: prefix(target, 2) + "~",
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "whitespace only codes",
+			desc:   "коды валют состоят только из пробелов",
+			base:   "   ",
+			target: "   ",
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "lowercase codes",
+			desc:   "оба кода валют в нижнем регистре",
+			base:   strings.ToLower(base),
+			target: strings.ToLower(target),
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "lowercase base code",
+			desc:   "код базовой валюты в нижнем регистре",
+			base:   strings.ToLower(base),
+			target: target,
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "lowercase target code",
+			desc:   "код целевой валюты в нижнем регистре",
+			base:   base,
+			target: strings.ToLower(target),
+			form:   url.Values{"rate": {"1.50"}},
+		},
+		{
+			name:   "mixed case codes",
+			desc:   "коды валют в смешанном регистре",
+			base:   lowerFirst(base),
+			target: lowerFirst(target),
+			form:   url.Values{"rate": {"1.50"}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			injectCodes := strings.NewReplacer("{base}", tc.base, "{target}", tc.target).Replace
+
+			resp, dumps, err := doRequest(
+				t,
+				http.MethodPatch,
+				injectCodes("/exchangeRate/{base}{target}"),
+				&tc.form,
+			)
+
+			var bodyBytes []byte
+			var body any
+			var decodeErr error
+
+			if err != nil {
+				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+			} else {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			descPrefix := fmt.Sprintf(injectCodes("PATCH /exchangeRate/{base}{target} : %s =>"), tc.desc)
+
+			c.assert("status code is 400", fmt.Sprintf("%s HTTP статус код 400", descPrefix), func(t *testing.T) {
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
+				}
+			})
+			c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			error, isObject := body.(map[string]any)
+			c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(error, "message")
+				if !valid {
+					t.Error(reason)
+				}
+			})
+		})
+	}
+}
+
+func patchExchangeRateNotFound(t *testing.T) {
+	type testCase struct {
+		name   string
+		desc   string
+		base   string
+		target string
+		rate   string
+	}
+
+	c, err := findUsedCurrency()
+	if err != nil {
+		t.Skip("Не удалось найти валюту существующую в API")
+	}
+
+	missing := findOrGenerateUnusedCurrency().Code
+	existing := c.Code
+	rate := "0.5"
+
+	testCases := []testCase{
+		{
+			name:   "missing rate",
+			desc:   "отсутствует параметр rate",
+			base:   existing,
+			target: missing,
+			rate:   rate,
+		},
+		{
+			name:   "blank rate",
+			desc:   "параметр rate пустой",
+			base:   missing,
+			target: existing,
+			rate:   rate,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			injectCodes := strings.NewReplacer("{base}", tc.base, "{target}", tc.target).Replace
+
+			resp, dumps, err := doRequest(
+				t,
+				http.MethodPatch,
+				injectCodes("/exchangeRate/{base}{target}"),
+				&url.Values{"rate": {tc.rate}},
+			)
+
+			var bodyBytes []byte
+			var body any
+			var decodeErr error
+
+			if err != nil {
+				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
+			} else {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			descPrefix := fmt.Sprintf(injectCodes("PATCH /exchangeRate/{base}{target} : %s =>"), tc.desc)
+
+			c.assert("status code is 404", fmt.Sprintf("%s HTTP статус код 404", descPrefix), func(t *testing.T) {
+				if resp.StatusCode != http.StatusNotFound {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusNotFound, resp.StatusCode)
+				}
+			})
+			c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			error, isObject := body.(map[string]any)
+			c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
