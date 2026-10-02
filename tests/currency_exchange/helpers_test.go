@@ -66,13 +66,16 @@ func doRequest(t *testing.T, method, path string, form *url.Values) (*http.Respo
 	if *dryRun {
 		return &http.Response{StatusCode: http.StatusTeapot, Header: http.Header{}, Body: http.NoBody}, nil, nil
 	}
+	if !deployAvailable {
+		return nil, nil, fmt.Errorf("деплой недоступен: %s", *baseURL)
+	}
 	var body io.Reader = nil
 	if form != nil {
 		body = strings.NewReader(form.Encode())
 	}
 	req, err := http.NewRequestWithContext(t.Context(), method, *baseURL+path, body)
 	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create request: %s", err)
+		return nil, nil, fmt.Errorf("ошибка при создании запроса: %s", err)
 	}
 	if form != nil {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -82,7 +85,7 @@ func doRequest(t *testing.T, method, path string, form *url.Values) (*http.Respo
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, &dumps{req: reqDump}, fmt.Errorf("failed to send request: %s", err)
+		return nil, &dumps{req: reqDump}, fmt.Errorf("ошибка при отправке запроса: %s", err)
 	}
 
 	respDump, _ := httputil.DumpResponse(resp, true)
@@ -108,7 +111,7 @@ func (c *checker) assert(name string, desc string, fn func(t *testing.T)) {
 		if c.err != nil {
 			t.Skip(c.err)
 		}
-		if *dryRun || fatalErrorOccurred {
+		if *dryRun || !deployAvailable {
 			t.SkipNow()
 		}
 		fn(t)
@@ -391,10 +394,4 @@ func lowerFirst(s string) string {
 		return s
 	}
 	return strings.ToLower(s[:1]) + s[1:]
-}
-
-func fatalf(t *testing.T, format string, args ...any) {
-	t.Helper()
-	fatalErrorOccurred = true
-	t.Fatalf(format, args...)
 }

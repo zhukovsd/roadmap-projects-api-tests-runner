@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"net"
+	"net/http"
 	"net/url"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 
 var baseURL = flag.String("base-url", "http://to_be_provided:8080", "API base URL to test")
 var dryRun = flag.Bool("dry-run", false, "Dry run mode, do not actually run tests")
-var fatalErrorOccurred = false
+var deployAvailable = true
 
 //go:embed testdata/currencies.json
 var testCurrenciesJSON []byte
@@ -33,7 +34,7 @@ func init() {
 }
 
 func TestMaster(t *testing.T) {
-	t.Run("host is reachable", hostIsReachable)
+	t.Run("deploy is reachable", deployIsReachable)
 
 	t.Run("currencies", func(t *testing.T) {
 		t.Run("get", getCurrencies)
@@ -56,36 +57,37 @@ func TestMaster(t *testing.T) {
 	})
 }
 
-func hostIsReachable(t *testing.T) {
+func deployIsReachable(t *testing.T) {
 	t.Attr(tests.TestDescriptionAttr, "Деплой доступен для проверки т.е. имеет публичный IP адрес")
+
+	setDeployUnavailable := func(format string, args ...any) {
+		deployAvailable = false
+		t.Fatalf(format, args...)
+	}
 
 	if *dryRun {
 		t.Skip()
 	}
 	u, err := url.Parse(*baseURL)
 	if err != nil {
-		fatalf(t, "Не удалось разобрать URL: %s", err)
-	}
-	ip := net.ParseIP(u.Hostname())
-
-	if ip != nil {
-		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsPrivate() {
-			fatalf(t, "Адрес %q недоступен из публичного интернета", u.Host)
-		}
-		return
+		setDeployUnavailable("Не удалось разобрать URL: %v", err)
 	}
 
 	addrs, err := net.LookupHost(u.Hostname())
 	if err != nil {
-		fatalf(t, "Не найдено адресов для хоста: %q", u.Hostname())
+		setDeployUnavailable("Не найдено адресов для хоста %q: %v", u.Hostname(), err)
 	}
 	for _, a := range addrs {
 		ip := net.ParseIP(a)
 		if ip == nil {
-			fatalf(t, "Недопустимый адрес %q для хоста %q", a, u.Hostname())
+			setDeployUnavailable("Недопустимый адрес %q для хоста %q", a, u.Hostname())
 		}
-		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsPrivate() {
-			fatalf(t, "Адрес %q недоступен из публичного интернета", u.Host)
+		if ip.IsLoopback() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast() || ip.IsPrivate() || ip.IsUnspecified() {
+			setDeployUnavailable("Адрес %q недоступен из публичного интернета", a)
 		}
+	}
+
+	if _, _, err = doRequest(t, http.MethodGet, "", nil); err != nil {
+		setDeployUnavailable("%v", err)
 	}
 }
