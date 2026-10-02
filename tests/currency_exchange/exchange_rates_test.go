@@ -608,7 +608,7 @@ func postExchangeRatesConflict(t *testing.T) {
 	c := &checker{t, dumps, err}
 
 	c.assert("status code is 409", "POST /exchangeRates : существующий обменный курс => HTTP статус код 409", func(t *testing.T) {
-		if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode != http.StatusConflict {
 			t.Errorf("Ожидался статус код %d, получен %d", http.StatusConflict, resp.StatusCode)
 		}
 	})
@@ -904,6 +904,10 @@ func patchExchangeRateSuccess(t *testing.T) {
 		t.Skip("Не удалось найти обменный курс для обновления")
 	}
 	reqRate := reqExchangeRate.Rate * 10
+
+	if reqRate < 0 {
+		reqRate *= -1
+	}
 
 	injectCodes := strings.NewReplacer(
 		"{base}", reqExchangeRate.BaseCurrency.Code,
