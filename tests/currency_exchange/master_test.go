@@ -51,6 +51,9 @@ func TestMaster(t *testing.T) {
 		t.Run("get", getExchangeRate)
 		t.Run("patch", patchExchangeRate)
 	})
+	t.Run("exchange", func(t *testing.T) {
+		t.Run("get", getExchange)
+	})
 }
 
 func hostIsReachable(t *testing.T) {
