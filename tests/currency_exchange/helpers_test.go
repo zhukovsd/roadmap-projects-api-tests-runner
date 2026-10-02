@@ -53,6 +53,14 @@ type ExchangeRateCreateInput struct {
 	Rate               float64 `json:"rate"`
 }
 
+type Exchange struct {
+	BaseCurrency    Currency `json:"baseCurrency"`
+	TargetCurrency  Currency `json:"targetCurrency"`
+	Rate            float64  `json:"rate"`
+	Amount          float64  `json:"amount"`
+	ConvertedAmount float64  `json:"convertedAmount"`
+}
+
 func doRequest(t *testing.T, method, path string, form *url.Values) (*http.Response, *dumps, error) {
 	t.Helper()
 	if *dryRun {
@@ -225,7 +233,7 @@ func mustMatchExchangeRates(t *testing.T, got, want ExchangeRate) {
 	mustMatchCurrencies(t, got.TargetCurrency, want.TargetCurrency)
 
 	if got.Rate != want.Rate {
-		t.Errorf("Ожидался обменный курс %f, получен %f", want.Rate, got.Rate)
+		t.Errorf("Ожидался обменный курс %v, получен %v", want.Rate, got.Rate)
 	}
 }
 
@@ -255,7 +263,42 @@ func isValidExchangeRate(er map[string]any) (bool, string) {
 	validateCurrency("baseCurrency")
 	validateCurrency("targetCurrency")
 
-	if valid, err := isValidRate(er); !valid {
+	if valid, err := isValidFloatField(er, "rate"); !valid {
+		errors = append(errors, err)
+	}
+
+	return len(errors) == 0, strings.Join(errors, "; ")
+}
+
+func isValidExchange(er map[string]any) (bool, string) {
+	errors := make([]string, 0)
+
+	validateCurrency := func(field string) {
+		f, found := er[field]
+		if !found {
+			errors = append(errors, fmt.Sprintf("Отсутствует поле объекта `%s`", field))
+			return
+		}
+		c, ok := f.(map[string]any)
+		if !ok {
+			errors = append(errors, fmt.Sprintf("Элемент `%s` не является JSON-объектом", field))
+			return
+		}
+		if valid, reason := isValidCurrency(c); !valid {
+			errors = append(errors, reason)
+		}
+	}
+
+	validateCurrency("baseCurrency")
+	validateCurrency("targetCurrency")
+
+	if valid, err := isValidFloatField(er, "rate"); !valid {
+		errors = append(errors, err)
+	}
+	if valid, err := isValidFloatField(er, "amount"); !valid {
+		errors = append(errors, err)
+	}
+	if valid, err := isValidFloatField(er, "convertedAmount"); !valid {
 		errors = append(errors, err)
 	}
 
@@ -289,7 +332,7 @@ func isValidID(c map[string]any) (bool, string) {
 		return false, fmt.Sprintf("Поле объекта `id` не является числом: %q", id)
 	}
 	if f != math.Trunc(f) {
-		return false, fmt.Sprintf("Поле объекта `id` не является целым числом: %f", f)
+		return false, fmt.Sprintf("Поле объекта `id` не является целым числом: %v", f)
 	}
 	return true, ""
 }
@@ -301,32 +344,35 @@ func isValidCode(c map[string]any) (bool, string) {
 	}
 	codeStr, ok := codeAny.(string)
 	if !ok {
-		return false, "Поле объекта `code` не является строкой"
+		return false, fmt.Sprintf("Поле объекта `code` не является строкой: %q", codeAny)
 	}
 	if len(codeStr) != 3 {
-		return false, "Поле объекта `code` не является допустимым кодом валюты"
+		return false, fmt.Sprintf("Поле объекта `code` не является допустимым кодом валюты: %q", codeStr)
 	}
 	return true, ""
 }
 
-func isValidRate(c map[string]any) (bool, string) {
-	rate, found := c["rate"]
+func isValidFloatField(c map[string]any, field string) (bool, string) {
+	f, found := c[field]
 	if !found {
-		return false, "Отсутствует поле объекта `rate`"
+		return false, fmt.Sprintf("Отсутствует поле объекта `%s`", field)
 	}
-	_, ok := rate.(float64)
+	float, ok := f.(float64)
 	if !ok {
-		return false, fmt.Sprintf("Поле объекта `rate` не является числом: %q", rate)
+		return false, fmt.Sprintf("Поле объекта `%s` не является числом: %q", field, f)
+	}
+	if float < 0 {
+		return false, fmt.Sprintf("Поле объекта `%s` не может быть отрицательным: %v", field, float)
 	}
 	return true, ""
 }
 
 func isValidStringField(c map[string]any, field string) (bool, string) {
-	n, found := c[field]
+	f, found := c[field]
 	if !found {
 		return false, fmt.Sprintf("Отсутствует поле объекта `%s`", field)
 	}
-	_, ok := n.(string)
+	_, ok := f.(string)
 	if !ok {
 		return false, fmt.Sprintf("Поле объекта `%s` не является строкой", field)
 	}
