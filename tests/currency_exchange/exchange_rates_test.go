@@ -413,14 +413,14 @@ func getExchangeRateBadRequest(t *testing.T) {
 
 			c := &checker{t, dumps, err}
 
-			descPrefix := fmt.Sprintf(injectCodes("GET /exchangeRate/{base}{target} : %s =>"), tc.desc)
+			descPrefix := fmt.Sprintf(injectCodes("GET /exchangeRate/{base}{target} : %s => "), tc.desc)
 
-			c.assert("status code is 400", fmt.Sprintf("%s HTTP статус код 400", descPrefix), func(t *testing.T) {
+			c.assert("status code is 400", descPrefix+"HTTP статус код 400", func(t *testing.T) {
 				if resp.StatusCode != http.StatusBadRequest {
 					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
 				}
 			})
-			c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+			c.assert("content type is json", descPrefix+"HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
 				contentType := resp.Header.Get("Content-Type")
 				if !strings.HasPrefix(contentType, "application/json") {
 					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
@@ -428,7 +428,7 @@ func getExchangeRateBadRequest(t *testing.T) {
 			})
 
 			error, isObject := body.(map[string]any)
-			c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+			c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
@@ -437,7 +437,7 @@ func getExchangeRateBadRequest(t *testing.T) {
 				}
 			})
 
-			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
+			c.assert("response contains field message", descPrefix+"JSON объект содержит поле message", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
@@ -1186,14 +1186,14 @@ func patchExchangeRateBadRequest(t *testing.T) {
 
 			c := &checker{t, dumps, err}
 
-			descPrefix := fmt.Sprintf(injectCodes("PATCH /exchangeRate/{base}{target} : %s =>"), tc.desc)
+			descPrefix := fmt.Sprintf(injectCodes("PATCH /exchangeRate/{base}{target} : %s => "), tc.desc)
 
-			c.assert("status code is 400", fmt.Sprintf("%s HTTP статус код 400", descPrefix), func(t *testing.T) {
+			c.assert("status code is 400", descPrefix+"HTTP статус код 400", func(t *testing.T) {
 				if resp.StatusCode != http.StatusBadRequest {
 					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
 				}
 			})
-			c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+			c.assert("content type is json", descPrefix+"HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
 				contentType := resp.Header.Get("Content-Type")
 				if !strings.HasPrefix(contentType, "application/json") {
 					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
@@ -1201,7 +1201,7 @@ func patchExchangeRateBadRequest(t *testing.T) {
 			})
 
 			error, isObject := body.(map[string]any)
-			c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+			c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
@@ -1210,7 +1210,7 @@ func patchExchangeRateBadRequest(t *testing.T) {
 				}
 			})
 
-			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
+			c.assert("response contains field message", descPrefix+"JSON объект содержит поле message", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
@@ -1287,14 +1287,14 @@ func patchExchangeRateNotFound(t *testing.T) {
 
 			c := &checker{t, dumps, err}
 
-			descPrefix := fmt.Sprintf(injectCodes("PATCH /exchangeRate/{base}{target} : %s =>"), tc.desc)
+			descPrefix := fmt.Sprintf(injectCodes("PATCH /exchangeRate/{base}{target} : %s => "), tc.desc)
 
-			c.assert("status code is 404", fmt.Sprintf("%s HTTP статус код 404", descPrefix), func(t *testing.T) {
+			c.assert("status code is 404", descPrefix+"HTTP статус код 404", func(t *testing.T) {
 				if resp.StatusCode != http.StatusNotFound {
 					t.Errorf("Ожидался статус код %d, получен %d", http.StatusNotFound, resp.StatusCode)
 				}
 			})
-			c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+			c.assert("content type is json", descPrefix+"HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
 				contentType := resp.Header.Get("Content-Type")
 				if !strings.HasPrefix(contentType, "application/json") {
 					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
@@ -1302,7 +1302,7 @@ func patchExchangeRateNotFound(t *testing.T) {
 			})
 
 			error, isObject := body.(map[string]any)
-			c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+			c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}
@@ -1311,7 +1311,7 @@ func patchExchangeRateNotFound(t *testing.T) {
 				}
 			})
 
-			c.assert("response contains field message", fmt.Sprintf("%s JSON объект содержит поле message", descPrefix), func(t *testing.T) {
+			c.assert("response contains field message", descPrefix+"JSON объект содержит поле message", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 				}

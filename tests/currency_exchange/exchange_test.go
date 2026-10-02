@@ -44,36 +44,35 @@ func getExchange(t *testing.T) {
 		}
 	}
 
-	descPrefix := fmt.Sprintf("GET %s =>", path)
+	descPrefix := fmt.Sprintf("GET %s => ", path)
 
 	c := &checker{t, dumps, err}
 
-	// TODO: replace fmt.Sprintf with simple concatenation everywhere
-	c.assert("status code is 200", fmt.Sprintf("%s HTTP статус код 200", descPrefix), func(t *testing.T) {
+	c.assert("status code is 200", descPrefix+"HTTP статус код 200", func(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Ожидался статус код %d, получен %d", http.StatusOK, resp.StatusCode)
 		}
 	})
-	c.assert("no redirects", fmt.Sprintf("%s HTTP статус код не в диапазоне 300-399 (редиректы)", descPrefix), func(t *testing.T) {
+	c.assert("no redirects", descPrefix+"HTTP статус код не в диапазоне 300-399 (редиректы)", func(t *testing.T) {
 		if resp.StatusCode >= 300 && resp.StatusCode < 400 {
 			t.Errorf("Неожиданный статус код редиректа %d", resp.StatusCode)
 		}
 	})
-	c.assert("content type is json", fmt.Sprintf("%s HTTP заголовок Content-Type начинается с application/json", descPrefix), func(t *testing.T) {
+	c.assert("content type is json", descPrefix+"HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
 		contentType := resp.Header.Get("Content-Type")
 		if !strings.HasPrefix(contentType, "application/json") {
 			t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
 		}
 	})
 
-	c.assert("response is valid json", fmt.Sprintf("%s Тело ответа парсится в JSON без ошибок", descPrefix), func(t *testing.T) {
+	c.assert("response is valid json", descPrefix+"Тело ответа парсится в JSON без ошибок", func(t *testing.T) {
 		if decodeErr != nil {
 			t.Errorf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
 	})
 
 	exchangeObject, isObject := body.(map[string]any)
-	c.assert("response is json", fmt.Sprintf("%s Тело ответа парсится в JSON объект без ошибок", descPrefix), func(t *testing.T) {
+	c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
 		if decodeErr != nil {
 			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
@@ -82,7 +81,7 @@ func getExchange(t *testing.T) {
 		}
 	})
 
-	c.assert("object fields are valid", fmt.Sprintf("%s JSON Объект содержит baseCurrency, targetCurrency, rate, amount, convertedAmount поля", descPrefix), func(t *testing.T) {
+	c.assert("object fields are valid", descPrefix+"JSON Объект содержит baseCurrency, targetCurrency, rate, amount, convertedAmount поля", func(t *testing.T) {
 		if decodeErr != nil {
 			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
 		}
@@ -96,7 +95,7 @@ func getExchange(t *testing.T) {
 	})
 
 	var respExchange Exchange
-	c.assert("response body matches expected schema", fmt.Sprintf("%s JSON тело ответа соответствует схеме в ТЗ", descPrefix), func(t *testing.T) {
+	c.assert("response body matches expected schema", descPrefix+"JSON тело ответа соответствует схеме в ТЗ", func(t *testing.T) {
 		decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&respExchange); err != nil {
