@@ -20,9 +20,7 @@ func getExchangeRates(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -117,9 +115,7 @@ func getExchangeRateSuccess(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -216,9 +212,7 @@ func getExchangeRateNotFound(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -407,9 +401,7 @@ func getExchangeRateBadRequest(t *testing.T) {
 			var body any
 			var decodeErr error
 
-			if err != nil {
-				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-			} else {
+			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)
 				if err != nil {
@@ -486,9 +478,7 @@ func postExchangeRatesSuccess(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -593,9 +583,7 @@ func postExchangeRatesConflict(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -746,9 +734,7 @@ func postExchangeRatesBadRequest(t *testing.T) {
 			var body any
 			var decodeErr error
 
-			if err != nil {
-				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-			} else {
+			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)
 				if err != nil {
@@ -840,9 +826,7 @@ func postExchangeRatesNotFound(t *testing.T) {
 			var body any
 			var decodeErr error
 
-			if err != nil {
-				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-			} else {
+			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)
 				if err != nil {
@@ -921,9 +905,7 @@ func patchExchangeRateSuccess(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
@@ -1192,9 +1174,7 @@ func patchExchangeRateBadRequest(t *testing.T) {
 			var body any
 			var decodeErr error
 
-			if err != nil {
-				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-			} else {
+			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)
 				if err != nil {
@@ -1295,9 +1275,7 @@ func patchExchangeRateNotFound(t *testing.T) {
 			var body any
 			var decodeErr error
 
-			if err != nil {
-				err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-			} else {
+			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)
 				if err != nil {

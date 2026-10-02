@@ -34,9 +34,7 @@ func getExchange(t *testing.T) {
 	var body any
 	var decodeErr error
 
-	if err != nil {
-		err = fmt.Errorf("Не удалось отправить запрос: %w", err)
-	} else {
+	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
