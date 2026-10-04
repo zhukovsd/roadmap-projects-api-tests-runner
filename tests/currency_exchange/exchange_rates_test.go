@@ -101,20 +101,29 @@ func getExchangeRate(t *testing.T) {
 func getExchangeRateSuccess(t *testing.T) {
 	reqExchangeRate, err := findUsedExchangeRate()
 	if err != nil {
-		t.Skip("Не удалось найти обменный курс, существующий в API")
+		err = fmt.Errorf("Не удалось найти обменный курс, существующий в API: %w", err)
 	}
 
-	injectCodes := strings.NewReplacer(
-		"{base}", reqExchangeRate.BaseCurrency.Code,
-		"{target}", reqExchangeRate.TargetCurrency.Code,
-	).Replace
+	base, target := "{base}", "{target}"
+	if err == nil {
+		base = reqExchangeRate.BaseCurrency.Code
+		target = reqExchangeRate.TargetCurrency.Code
+	}
+	injectCodes := strings.NewReplacer("{base}", base, "{target}", target).Replace
 
-	resp, dumps, err := doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
+	}
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
-
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
@@ -196,22 +205,31 @@ func getExchangeRateSuccess(t *testing.T) {
 }
 
 func getExchangeRateNotFound(t *testing.T) {
-	exchangeRate, err := findUnusedExchangeRate()
+	reqExchangeRate, err := findUnusedExchangeRate()
 	if err != nil {
-		t.Skip("Не удалось найти обменный курс, несуществующий в API")
+		err = fmt.Errorf("Не удалось найти обменный курс, несуществующий в API: %w", err)
 	}
 
-	injectCodes := strings.NewReplacer(
-		"{base}", exchangeRate.BaseCurrency.Code,
-		"{target}", exchangeRate.TargetCurrency.Code,
-	).Replace
+	base, target := "{base}", "{target}"
+	if err == nil {
+		base = reqExchangeRate.BaseCurrency.Code
+		target = reqExchangeRate.TargetCurrency.Code
+	}
+	injectCodes := strings.NewReplacer("{base}", base, "{target}", target).Replace
 
-	resp, dumps, err := doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodGet, injectCodes("/exchangeRate/{base}{target}"), nil)
+	}
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
-
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
@@ -463,21 +481,29 @@ func postExchangeRates(t *testing.T) {
 func postExchangeRatesSuccess(t *testing.T) {
 	reqExchangeRate, err := findUnusedExchangeRate()
 	if err != nil {
-		t.Skip("Не удалось найти обменный курс для вставки")
+		err = fmt.Errorf("Не удалось найти обменный курс, несуществующий в API: %w", err)
 	}
 	reqRate := 0.5
-
-	form := url.Values{
-		"baseCurrencyCode":   {reqExchangeRate.BaseCurrency.Code},
-		"targetCurrencyCode": {reqExchangeRate.TargetCurrency.Code},
-		"rate":               {strconv.FormatFloat(reqRate, 'f', 2, 64)},
+	form := url.Values{}
+	if err == nil {
+		form.Set("baseCurrencyCode", reqExchangeRate.BaseCurrency.Code)
+		form.Set("targetCurrencyCode", reqExchangeRate.TargetCurrency.Code)
+		form.Set("rate", strconv.FormatFloat(reqRate, 'f', 2, 64))
 	}
-	resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &form)
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodPost, "/exchangeRates", &form)
+	}
 
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
@@ -569,20 +595,29 @@ func postExchangeRatesSuccess(t *testing.T) {
 func postExchangeRatesConflict(t *testing.T) {
 	reqExchangeRate, err := findUsedExchangeRate()
 	if err != nil {
-		t.Skip("Не удалось найти обменный курс, вызывающий конфликт")
+		err = fmt.Errorf("Не удалось найти обменный курс, вызывающий конфликт: %w", err)
 	}
 
-	form := url.Values{
-		"baseCurrencyCode":   {reqExchangeRate.BaseCurrency.Code},
-		"targetCurrencyCode": {reqExchangeRate.TargetCurrency.Code},
-		"rate":               {strconv.FormatFloat(reqExchangeRate.Rate, 'f', 2, 64)},
+	form := url.Values{}
+	if err == nil {
+		form.Set("baseCurrencyCode", reqExchangeRate.BaseCurrency.Code)
+		form.Set("targetCurrencyCode", reqExchangeRate.TargetCurrency.Code)
+		form.Set("rate", strconv.FormatFloat(reqExchangeRate.Rate, 'f', 2, 64))
 	}
-	resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &form)
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodPost, "/exchangeRates", &form)
+	}
 
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
@@ -787,9 +822,12 @@ func postExchangeRatesBadRequest(t *testing.T) {
 func postExchangeRatesNotFound(t *testing.T) {
 	c, err := findUsedCurrency()
 	if err != nil {
-		t.Skip("Не удалось найти валюту существующую в API")
+		err = fmt.Errorf("Не удалось найти валюту существующую в API: %w", err)
 	}
-	existing := c.Code
+	existing := "{code}"
+	if err == nil {
+		existing = c.Code
+	}
 	missing := findOrGenerateUnusedCurrency().Code
 	rate := "0.50"
 
@@ -820,12 +858,19 @@ func postExchangeRatesNotFound(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			resp, dumps, err := doRequest(t, http.MethodPost, "/exchangeRates", &tc.form)
+			var (
+				resp  *http.Response
+				dumps *dumps
+			)
+			if err == nil {
+				resp, dumps, err = doRequest(t, http.MethodPost, "/exchangeRates", &tc.form)
+			}
 
-			var bodyBytes []byte
-			var body any
-			var decodeErr error
-
+			var (
+				bodyBytes []byte
+				body      any
+				decodeErr error
+			)
 			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)
@@ -885,26 +930,38 @@ func patchExchangeRate(t *testing.T) {
 func patchExchangeRateSuccess(t *testing.T) {
 	reqExchangeRate, err := findUsedExchangeRate()
 	if err != nil {
-		t.Skip("Не удалось найти обменный курс для обновления")
-	}
-	reqRate := reqExchangeRate.Rate * 10
-
-	if reqRate < 0 {
-		reqRate *= -1
+		err = fmt.Errorf("Не удалось найти обменный курс для обновления: %w", err)
 	}
 
-	injectCodes := strings.NewReplacer(
-		"{base}", reqExchangeRate.BaseCurrency.Code,
-		"{target}", reqExchangeRate.TargetCurrency.Code,
-	).Replace
+	base, target, reqRate := "{base}", "{target}", 0.0
+	if err == nil {
+		base = reqExchangeRate.BaseCurrency.Code
+		target = reqExchangeRate.TargetCurrency.Code
+		reqRate = reqExchangeRate.Rate * 10
+		if reqRate < 0 {
+			reqRate *= -1
+		}
+	}
+	injectCodes := strings.NewReplacer("{base}", base, "{target}", target).Replace
 
-	form := url.Values{"rate": {strconv.FormatFloat(reqRate, 'f', 2, 64)}}
-	resp, dumps, err := doRequest(t, http.MethodPatch, injectCodes("/exchangeRate/{base}{target}"), &form)
+	form := url.Values{}
+	if err == nil {
+		form.Set("rate", strconv.FormatFloat(reqRate, 'f', 2, 64))
+	}
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodPatch, injectCodes("/exchangeRate/{base}{target}"), &form)
+	}
 
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
@@ -1236,11 +1293,14 @@ func patchExchangeRateNotFound(t *testing.T) {
 
 	c, err := findUsedCurrency()
 	if err != nil {
-		t.Skip("Не удалось найти валюту существующую в API")
+		err = fmt.Errorf("Не удалось найти валюту существующую в API: %w", err)
 	}
 
+	existing := "{code}"
+	if err == nil {
+		existing = c.Code
+	}
 	missing := findOrGenerateUnusedCurrency().Code
-	existing := c.Code
 	form := url.Values{"rate": {"0.5"}}
 
 	testCases := []testCase{
@@ -1264,17 +1324,19 @@ func patchExchangeRateNotFound(t *testing.T) {
 
 			injectCodes := strings.NewReplacer("{base}", tc.base, "{target}", tc.target).Replace
 
-			resp, dumps, err := doRequest(
-				t,
-				http.MethodPatch,
-				injectCodes("/exchangeRate/{base}{target}"),
-				&form,
+			var (
+				resp  *http.Response
+				dumps *dumps
 			)
+			if err == nil {
+				resp, dumps, err = doRequest(t, http.MethodPatch, injectCodes("/exchangeRate/{base}{target}"), &form)
+			}
 
-			var bodyBytes []byte
-			var body any
-			var decodeErr error
-
+			var (
+				bodyBytes []byte
+				body      any
+				decodeErr error
+			)
 			if err == nil {
 				defer resp.Body.Close()
 				bodyBytes, err = io.ReadAll(resp.Body)

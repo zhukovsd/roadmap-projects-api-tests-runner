@@ -99,17 +99,28 @@ func getCurrency(t *testing.T) {
 func getCurrencySuccess(t *testing.T) {
 	reqCurrency, err := findUsedCurrency()
 	if err != nil {
-		t.Skip("Не удалось найти валюту, существующую в API")
+		err = fmt.Errorf("Не удалось найти валюту, существующую в API: %w", err)
 	}
 
-	injectCode := strings.NewReplacer("{code}", reqCurrency.Code).Replace
+	code := "{code}"
+	if err == nil {
+		code = reqCurrency.Code
+	}
+	injectCode := strings.NewReplacer("{code}", code).Replace
 
-	resp, dumps, err := doRequest(t, http.MethodGet, injectCode("/currency/{code}"), nil)
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodGet, injectCode("/currency/{code}"), nil)
+	}
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
-
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
@@ -484,18 +495,31 @@ func postCurrenciesSuccess(t *testing.T) {
 }
 
 func postCurrenciesConflict(t *testing.T) {
-	currency, err := findUsedCurrency()
+	reqCurrency, err := findUsedCurrency()
 	if err != nil {
-		t.Skip("Не удалось найти валюту, вызывающую конфликт")
+		err = fmt.Errorf("Не удалось найти валюту, существующую в API: %w", err)
 	}
 
-	form := url.Values{"code": {currency.Code}, "sign": {currency.Sign}, "name": {currency.Name}}
-	resp, dumps, err := doRequest(t, http.MethodPost, "/currencies", &form)
+	form := url.Values{}
+	if err == nil {
+		form.Set("code", reqCurrency.Code)
+		form.Set("sign", reqCurrency.Sign)
+		form.Set("name", reqCurrency.Name)
+	}
 
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodPost, "/currencies", &form)
+	}
 
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)

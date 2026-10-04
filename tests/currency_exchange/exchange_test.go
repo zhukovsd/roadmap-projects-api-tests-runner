@@ -15,25 +15,34 @@ import (
 func getExchange(t *testing.T) {
 	er, err := findUsedExchangeRate()
 	if err != nil {
-		t.Skip("Не удалось найти обменный курс, существующий в API")
+		err = fmt.Errorf("Не удалось найти обменный курс, существующий в API: %w", err)
 	}
 
 	amount := 10.00
 
-	urlParams := url.Values{
-		"from":   {er.BaseCurrency.Code},
-		"to":     {er.TargetCurrency.Code},
-		"amount": {strconv.FormatFloat(amount, 'f', 2, 64)},
+	path := "/exchange"
+	if err == nil {
+		urlParams := url.Values{
+			"from":   {er.BaseCurrency.Code},
+			"to":     {er.TargetCurrency.Code},
+			"amount": {strconv.FormatFloat(amount, 'f', 2, 64)},
+		}
+		path += "?" + urlParams.Encode()
 	}
 
-	path := "/exchange?" + urlParams.Encode()
+	var (
+		resp  *http.Response
+		dumps *dumps
+	)
+	if err == nil {
+		resp, dumps, err = doRequest(t, http.MethodGet, path, nil)
+	}
 
-	resp, dumps, err := doRequest(t, http.MethodGet, path, nil)
-
-	var bodyBytes []byte
-	var body any
-	var decodeErr error
-
+	var (
+		bodyBytes []byte
+		body      any
+		decodeErr error
+	)
 	if err == nil {
 		defer resp.Body.Close()
 		bodyBytes, err = io.ReadAll(resp.Body)
