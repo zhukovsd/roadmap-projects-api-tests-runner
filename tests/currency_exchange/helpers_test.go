@@ -382,6 +382,24 @@ func isValidStringField(c map[string]any, field string) (bool, string) {
 	return true, ""
 }
 
+// Required rounding is two decimal places, e.g. 11.22
+//
+// For values starting with 64.32..., only 64.32 or 64.33 are possible
+// regardless of input precision or rounding mode.
+func isValidRounding(actual, expected float64) error {
+	roundDown := math.Floor(expected*100) / 100
+	roundUp := math.Ceil(expected*100) / 100
+
+	if actual == roundDown || actual == roundUp {
+		return nil
+	}
+
+	return fmt.Errorf(
+		"Ожидалось корректное округление до двух десятичных знаков: %v или %v, получено %v",
+		roundDown, roundUp, actual,
+	)
+}
+
 func prefix(s string, n int) string {
 	if len(s) < n {
 		return s

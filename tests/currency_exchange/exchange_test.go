@@ -13,7 +13,7 @@ import (
 )
 
 func getExchange(t *testing.T) {
-	er, err := findUsedExchangeRate()
+	reqExchangeRate, err := findUsedExchangeRate()
 	if err != nil {
 		err = fmt.Errorf("Не удалось найти обменный курс, существующий в API: %w", err)
 	}
@@ -23,8 +23,8 @@ func getExchange(t *testing.T) {
 	path := "/exchange"
 	if err == nil {
 		urlParams := url.Values{
-			"from":   {er.BaseCurrency.Code},
-			"to":     {er.TargetCurrency.Code},
+			"from":   {reqExchangeRate.BaseCurrency.Code},
+			"to":     {reqExchangeRate.TargetCurrency.Code},
 			"amount": {strconv.FormatFloat(amount, 'f', 2, 64)},
 		}
 		path += "?" + urlParams.Encode()
@@ -90,6 +90,7 @@ func getExchange(t *testing.T) {
 		}
 	})
 
+	var exchangeInvalidErr error
 	c.assert("object fields are valid", descPrefix+"JSON Объект содержит baseCurrency, targetCurrency, rate, amount, convertedAmount поля", func(t *testing.T) {
 		if decodeErr != nil {
 			t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
@@ -99,23 +100,70 @@ func getExchange(t *testing.T) {
 		}
 		valid, reason := isValidExchange(exchangeObject)
 		if !valid {
-			t.Error(reason)
+			exchangeInvalidErr = fmt.Errorf("Объект JSON не является валидным объектом `Exchange`: %s", reason)
+			t.Error(exchangeInvalidErr)
 		}
 	})
 
 	var respExchange Exchange
 	c.assert("response body matches expected schema", descPrefix+"JSON тело ответа соответствует схеме в ТЗ", func(t *testing.T) {
+		if exchangeInvalidErr != nil {
+			t.Skip(exchangeInvalidErr)
+		}
 		decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
 		decoder.DisallowUnknownFields()
 		if err := decoder.Decode(&respExchange); err != nil {
-			t.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %s", err)
+			decodeErr = fmt.Errorf("Не удалось разобрать тело ответа в структуру (POJO/DTO): %w", err)
+			t.Error(decodeErr)
 		}
+	})
 
+	var roundingErr error
+	c.assert("converted amount is rounded", descPrefix+"Результат конвертации корректно округлен", func(t *testing.T) {
+		if exchangeInvalidErr != nil {
+			t.Skip(exchangeInvalidErr)
+		}
+		if decodeErr != nil {
+			t.Skip(decodeErr)
+		}
 		s := strconv.FormatFloat(respExchange.ConvertedAmount, 'f', -1, 64)
 		_, decimalPart, found := strings.Cut(s, ".")
 
 		if found && len(decimalPart) > 2 {
-			t.Errorf("Ожидалось корректное округление `convertedAmount` до двух десятичных знаков, получено %q", s)
+			roundingErr = fmt.Errorf("Ожидалось округление `convertedAmount` до двух десятичных знаков, получено %q", s)
+			t.Error(roundingErr)
+		}
+	})
+
+	var exchangeRateErr error
+	c.assert("matches requested exchange rate", descPrefix+"Возвращенный обменный курс соответствует запрошенному курсу", func(t *testing.T) {
+		if exchangeInvalidErr != nil {
+			t.Skip(exchangeInvalidErr)
+		}
+		if decodeErr != nil {
+			t.Skip(decodeErr)
+		}
+		if respExchange.Rate != reqExchangeRate.Rate {
+			exchangeRateErr = fmt.Errorf("Ожидался обменный курс %v, получен %v", reqExchangeRate.Rate, respExchange.Rate)
+			t.Error(exchangeRateErr)
+		}
+	})
+
+	c.assert("conversion is correct", descPrefix+"Конвертация математически корректна", func(t *testing.T) {
+		if exchangeInvalidErr != nil {
+			t.Skip(exchangeInvalidErr)
+		}
+		if decodeErr != nil {
+			t.Skip(decodeErr)
+		}
+		if roundingErr != nil {
+			t.Skip(roundingErr)
+		}
+		if exchangeRateErr != nil {
+			t.Skip(exchangeRateErr)
+		}
+		if err := isValidRounding(respExchange.ConvertedAmount, amount*respExchange.Rate); err != nil {
+			t.Error(err)
 		}
 	})
 }
