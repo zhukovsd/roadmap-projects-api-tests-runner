@@ -208,6 +208,32 @@ func findUsedExchangeRate() (ExchangeRate, error) {
 	return apiExchangeRates[0], nil
 }
 
+func findDirectExchangeRate() (ExchangeRate, error) {
+	return findUsedExchangeRate()
+}
+
+func findInverseExchangeRate() (ExchangeRate, error) {
+	if len(apiExchangeRates) == 0 {
+		if *dryRun {
+			return ExchangeRate{322, Currency{}, Currency{}, 0.333333}, nil
+		}
+		return ExchangeRate{}, fmt.Errorf("no inverse exchange rates found")
+	}
+	baseCurrencies := make(map[string]struct{})
+
+	for _, er := range apiExchangeRates {
+		baseCurrencies[er.BaseCurrency.Code] = struct{}{}
+	}
+
+	for _, er := range apiExchangeRates {
+		if _, found := baseCurrencies[er.TargetCurrency.Code]; !found {
+			return er, nil
+		}
+	}
+
+	return ExchangeRate{}, fmt.Errorf("no inverse exchange rates found")
+}
+
 func mustMatchCurrencies(t *testing.T, got, want Currency) {
 	t.Helper()
 
@@ -382,21 +408,25 @@ func isValidStringField(c map[string]any, field string) (bool, string) {
 	return true, ""
 }
 
-// Required rounding is two decimal places, e.g. 11.22
+// isValidRounding checks whether actual is equal to either the lower or upper
+// bound of expected truncated to the specified number of decimal places.
 //
-// For values starting with 64.32..., only 64.32 or 64.33 are possible
-// regardless of input precision or rounding mode.
-func isValidRounding(actual, expected float64) error {
-	roundDown := math.Floor(expected*100) / 100
-	roundUp := math.Ceil(expected*100) / 100
+// This allows for differences in rounding modes and input precision.
+//
+// For example, with 2 decimal places, 64.32... may yield either 64.32 or 64.33.
+func isValidRounding(actual, expected float64, decimalPlaces int) error {
+	precision := math.Pow10(decimalPlaces)
+
+	roundDown := math.Floor(expected*precision) / precision
+	roundUp := math.Ceil(expected*precision) / precision
 
 	if actual == roundDown || actual == roundUp {
 		return nil
 	}
 
 	return fmt.Errorf(
-		"Ожидалось корректное округление до двух десятичных знаков: %v или %v, получено %v",
-		roundDown, roundUp, actual,
+		"Ожидалось корректное округление до %v десятичных знаков: %v или %v, получено %v",
+		decimalPlaces, roundDown, roundUp, actual,
 	)
 }
 
