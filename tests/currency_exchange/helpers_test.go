@@ -209,7 +209,11 @@ func findUsedExchangeRate() (ExchangeRate, error) {
 }
 
 func findDirectExchangeRate() (ExchangeRate, error) {
-	return findUsedExchangeRate()
+	er, err := findUsedExchangeRate()
+	if err != nil {
+		return ExchangeRate{}, fmt.Errorf("no direct exchange rates found")
+	}
+	return er, nil
 }
 
 func findInverseExchangeRate() (ExchangeRate, error) {
@@ -227,11 +231,55 @@ func findInverseExchangeRate() (ExchangeRate, error) {
 
 	for _, er := range apiExchangeRates {
 		if _, found := baseCurrencies[er.TargetCurrency.Code]; !found {
-			return er, nil
+			return ExchangeRate{
+				ID:             0,
+				BaseCurrency:   er.TargetCurrency,
+				TargetCurrency: er.BaseCurrency,
+				Rate:           1 / er.Rate,
+			}, nil
 		}
 	}
 
 	return ExchangeRate{}, fmt.Errorf("no inverse exchange rates found")
+}
+
+func findUSDCrossExchangeRate() (ExchangeRate, error) {
+	if len(apiExchangeRates) == 0 {
+		if *dryRun {
+			return ExchangeRate{322, Currency{}, Currency{}, 0.333333}, nil
+		}
+		return ExchangeRate{}, fmt.Errorf("no cross exchange rates found")
+	}
+	targetOf := make(map[string]string)
+	usdBasedRates := make([]ExchangeRate, 0)
+
+	for _, er := range apiExchangeRates {
+		if er.BaseCurrency.Code == "USD" {
+			usdBasedRates = append(usdBasedRates, er)
+			continue
+		}
+		targetOf[er.BaseCurrency.Code] = er.TargetCurrency.Code
+	}
+
+	for i := 0; i < len(usdBasedRates); i++ {
+		usdToBase := usdBasedRates[i]
+		candidateBaseCur := usdToBase.TargetCurrency
+		for j := i + 1; j < len(usdBasedRates); j++ {
+			usdToTarget := usdBasedRates[j]
+			candidateTargetCur := usdToTarget.TargetCurrency
+
+			if targetOf[candidateBaseCur.Code] != candidateTargetCur.Code {
+				return ExchangeRate{
+					ID:             0,
+					BaseCurrency:   candidateBaseCur,
+					TargetCurrency: candidateTargetCur,
+					Rate:           usdToTarget.Rate / usdToBase.Rate,
+				}, nil
+			}
+		}
+	}
+
+	return ExchangeRate{}, fmt.Errorf("no cross exchange rates found")
 }
 
 func mustMatchCurrencies(t *testing.T, got, want Currency) {
