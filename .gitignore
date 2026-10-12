@@ -1,3 +1,4 @@
 .dev.env
+.direnv
 codebook.toml
 bin
