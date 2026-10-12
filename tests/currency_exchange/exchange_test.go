@@ -15,6 +15,7 @@ import (
 func getExchange(t *testing.T) {
 	t.Run("success", getExchangeSuccess)
 	t.Run("bad request", getExchangeBadRequest)
+	t.Run("not found", getExchangeNotFound)
 }
 
 func getExchangeSuccess(t *testing.T) {
@@ -365,6 +366,128 @@ func getExchangeBadRequest(t *testing.T) {
 			})
 
 			errorObject, isObject := body.(map[string]any)
+			c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", descPrefix+"JSON объект содержит поле message", func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(errorObject, "message")
+				if !valid {
+					t.Error(reason)
+				}
+			})
+		})
+	}
+}
+
+func getExchangeNotFound(t *testing.T) {
+	type testCase struct {
+		name   string
+		desc   string
+		err    error
+		params url.Values
+	}
+
+	missing := findOrGenerateUnusedCurrency()
+	existing, existingErr := findUsedCurrency()
+
+	if existingErr != nil {
+		existingErr = fmt.Errorf("Не удалось найти валюту существующую в API: %w", existingErr)
+	}
+
+	baseWithoutExchangePath, targetWithoutExchangePath, exchangePathErr := findCurrenciesWithoutExchangePath()
+
+	if exchangePathErr != nil {
+		exchangePathErr = fmt.Errorf("Не удалось найти валюты без возможности обмена: %w", exchangePathErr)
+	}
+
+	testCases := []testCase{
+		{
+			name:   "base currency does not exist",
+			desc:   "базовой валюты не существует",
+			err:    existingErr,
+			params: url.Values{"from": {missing.Code}, "to": {existing.Code}, "amount": {"10.00"}},
+		},
+		{
+			name:   "target currency does not exist",
+			desc:   "целевой валюты не существует",
+			err:    existingErr,
+			params: url.Values{"from": {existing.Code}, "to": {missing.Code}, "amount": {"10.00"}},
+		},
+		{
+			name: "exchange rate does not exist",
+			desc: "обменный курс между валютами отсутствует",
+			err:  exchangePathErr,
+			params: url.Values{
+				"from":   {baseWithoutExchangePath.Code},
+				"to":     {targetWithoutExchangePath.Code},
+				"amount": {"10.00"},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var (
+				resp  *http.Response
+				dumps *dumps
+				err   = tc.err
+			)
+
+			path := "/exchange?" + tc.params.Encode()
+
+			if err == nil {
+				resp, dumps, err = doRequest(t, http.MethodGet, path, nil)
+			}
+
+			var (
+				bodyBytes []byte
+				body      any
+				decodeErr error
+			)
+
+			if err == nil {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			descPrefix := fmt.Sprintf("GET %s : %s => ", path, tc.desc)
+
+			c.assert("status code is 404", descPrefix+"HTTP статус код 404", func(t *testing.T) {
+				if resp.StatusCode != http.StatusNotFound {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusNotFound, resp.StatusCode)
+				}
+			})
+
+			c.assert("content type is json", descPrefix+"HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			errorObject, isObject := body.(map[string]any)
+
 			c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
 				if decodeErr != nil {
 					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)

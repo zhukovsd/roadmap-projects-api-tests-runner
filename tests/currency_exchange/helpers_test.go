@@ -282,6 +282,47 @@ func findUSDCrossExchangeRate() (ExchangeRate, error) {
 	return ExchangeRate{}, fmt.Errorf("no cross exchange rates found")
 }
 
+func findCurrenciesWithoutExchangePath() (Currency, Currency, error) {
+	directRates := make(map[string]map[string]struct{})
+	hasUSDBasedRate := make(map[string]struct{})
+
+	for _, er := range apiExchangeRates {
+		if er.BaseCurrency.Code == "USD" {
+			hasUSDBasedRate[er.TargetCurrency.Code] = struct{}{}
+		}
+		if directRates[er.BaseCurrency.Code] == nil {
+			directRates[er.BaseCurrency.Code] = make(map[string]struct{})
+		}
+		directRates[er.BaseCurrency.Code][er.TargetCurrency.Code] = struct{}{}
+	}
+
+	for _, candidateBaseCur := range apiCurrencies {
+		for _, candidateTargetCur := range apiCurrencies {
+			if candidateBaseCur.Code == candidateTargetCur.Code {
+				continue
+			}
+			// Direct exchange path exists
+			if _, exists := directRates[candidateBaseCur.Code][candidateTargetCur.Code]; exists {
+				continue
+			}
+			// Inverse exchange path exists
+			if _, exists := directRates[candidateTargetCur.Code][candidateBaseCur.Code]; exists {
+				continue
+			}
+			_, candidateBaseHasUSDBasedRate := hasUSDBasedRate[candidateBaseCur.Code]
+			_, candidateTargetHasUSDBasedRate := hasUSDBasedRate[candidateTargetCur.Code]
+
+			// Cross exchange path exists
+			if candidateBaseHasUSDBasedRate && candidateTargetHasUSDBasedRate {
+				continue
+			}
+			return candidateBaseCur, candidateTargetCur, nil
+		}
+	}
+
+	return Currency{}, Currency{}, fmt.Errorf("no currencies without exchange path found")
+}
+
 func mustMatchCurrencies(t *testing.T, got, want Currency) {
 	t.Helper()
 
