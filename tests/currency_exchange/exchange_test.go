@@ -13,6 +13,11 @@ import (
 )
 
 func getExchange(t *testing.T) {
+	t.Run("success", getExchangeSuccess)
+	t.Run("bad request", getExchangeBadRequest)
+}
+
+func getExchangeSuccess(t *testing.T) {
 	type testCase struct {
 		name   string
 		desc   string
@@ -199,6 +204,178 @@ func getExchange(t *testing.T) {
 				}
 				if err := isValidRounding(respExchange.ConvertedAmount, amount*respExchange.Rate, 2); err != nil {
 					t.Error(err)
+				}
+			})
+		})
+	}
+}
+
+func getExchangeBadRequest(t *testing.T) {
+	type testCase struct {
+		name   string
+		desc   string
+		params url.Values
+	}
+
+	testCases := []testCase{
+		{
+			name:   "missing from",
+			desc:   "отсутствует параметр from",
+			params: url.Values{"to": {"USD"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "missing to",
+			desc:   "отсутствует параметр to",
+			params: url.Values{"from": {"EUR"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "missing amount",
+			desc:   "отсутствует параметр amount",
+			params: url.Values{"from": {"EUR"}, "to": {"USD"}},
+		},
+		{
+			name:   "blank from",
+			desc:   "параметр from пустой",
+			params: url.Values{"from": {""}, "to": {"USD"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "blank to",
+			desc:   "параметр to пустой",
+			params: url.Values{"from": {"EUR"}, "to": {""}, "amount": {"10.00"}},
+		},
+		{
+			name:   "blank amount",
+			desc:   "параметр amount пустой",
+			params: url.Values{"from": {"EUR"}, "to": {"USD"}, "amount": {""}},
+		},
+		{
+			name:   "non-numeric amount",
+			desc:   "параметр amount не является числом",
+			params: url.Values{"from": {"EUR"}, "to": {"USD"}, "amount": {"abc"}},
+		},
+		{
+			name:   "negative amount",
+			desc:   "параметр amount отрицательный",
+			params: url.Values{"from": {"EUR"}, "to": {"USD"}, "amount": {"-10.00"}},
+		},
+		{
+			name:   "whitespace only amount",
+			desc:   "параметр amount состоит только из пробелов",
+			params: url.Values{"from": {"EUR"}, "to": {"USD"}, "amount": {"   "}},
+		},
+		{
+			name:   "same currencies",
+			desc:   "исходная и целевая валюты совпадают",
+			params: url.Values{"from": {"USD"}, "to": {"USD"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "currency codes too short",
+			desc:   "коды валют короче допустимой длины",
+			params: url.Values{"from": {"EU"}, "to": {"US"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "currency codes too long",
+			desc:   "коды валют превышают допустимую длину",
+			params: url.Values{"from": {"EURO"}, "to": {"USDD"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "currency codes with digits",
+			desc:   "коды валют содержат цифры",
+			params: url.Values{"from": {"EU1"}, "to": {"US2"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "currency codes with special characters",
+			desc:   "коды валют содержат специальные символы",
+			params: url.Values{"from": {"EU-"}, "to": {"US~"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "whitespace only currency codes",
+			desc:   "коды валют состоят только из пробелов",
+			params: url.Values{"from": {"   "}, "to": {"   "}, "amount": {"10.00"}},
+		},
+		{
+			name:   "lowercase currency codes",
+			desc:   "оба кода валют в нижнем регистре",
+			params: url.Values{"from": {"eur"}, "to": {"usd"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "lowercase from",
+			desc:   "код исходной валюты в нижнем регистре",
+			params: url.Values{"from": {"eur"}, "to": {"USD"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "lowercase to",
+			desc:   "код целевой валюты в нижнем регистре",
+			params: url.Values{"from": {"EUR"}, "to": {"usd"}, "amount": {"10.00"}},
+		},
+		{
+			name:   "mixed case currency codes",
+			desc:   "коды валют в смешанном регистре",
+			params: url.Values{"from": {"eUr"}, "to": {"uSd"}, "amount": {"10.00"}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			path := "/exchange?" + tc.params.Encode()
+
+			resp, dumps, err := doRequest(t, http.MethodGet, path, nil)
+
+			var (
+				bodyBytes []byte
+				body      any
+				decodeErr error
+			)
+
+			if err == nil {
+				defer resp.Body.Close()
+				bodyBytes, err = io.ReadAll(resp.Body)
+				if err != nil {
+					err = fmt.Errorf("Не удалось прочитать тело ответа: %w", err)
+				} else {
+					decodeErr = json.Unmarshal(bodyBytes, &body)
+				}
+			}
+
+			c := &checker{t, dumps, err}
+
+			descPrefix := fmt.Sprintf("GET %s : %s => ", path, tc.desc)
+
+			c.assert("status code is 400", descPrefix+"HTTP статус код 400", func(t *testing.T) {
+				if resp.StatusCode != http.StatusBadRequest {
+					t.Errorf("Ожидался статус код %d, получен %d", http.StatusBadRequest, resp.StatusCode)
+				}
+			})
+
+			c.assert("content type is json", descPrefix+"HTTP заголовок Content-Type начинается с application/json", func(t *testing.T) {
+				contentType := resp.Header.Get("Content-Type")
+				if !strings.HasPrefix(contentType, "application/json") {
+					t.Errorf("Ожидался заголовок Content-Type %q, получен %q", "application/json", contentType)
+				}
+			})
+
+			errorObject, isObject := body.(map[string]any)
+			c.assert("response is json", descPrefix+"Тело ответа парсится в JSON объект без ошибок", func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Error("Тело ответа не является JSON-объектом")
+				}
+			})
+
+			c.assert("response contains field message", descPrefix+"JSON объект содержит поле message", func(t *testing.T) {
+				if decodeErr != nil {
+					t.Skipf("Тело ответа не является валидным JSON: %s", decodeErr)
+				}
+				if !isObject {
+					t.Skip("Тело ответа не является JSON-объектом")
+				}
+				valid, reason := isValidStringField(errorObject, "message")
+				if !valid {
+					t.Error(reason)
 				}
 			})
 		})
