@@ -21,25 +21,33 @@ func getExchangeSuccess(t *testing.T) {
 	type testCase struct {
 		name   string
 		desc   string
+		amount float64
 		rateFn func() (ExchangeRate, error)
 	}
-
-	amount := 10.00
 
 	testCases := []testCase{
 		{
 			name:   "direct",
 			desc:   "прямой обменный курс между валютами",
+			amount: 10.0,
+			rateFn: findDirectExchangeRate,
+		},
+		{
+			name:   "direct with zero amount",
+			desc:   "прямой обменный курс между валютами и параметр amount равен нулю",
+			amount: 0.0,
 			rateFn: findDirectExchangeRate,
 		},
 		{
 			name:   "inverse",
 			desc:   "обратный обменный курс между валютами",
+			amount: 10.0,
 			rateFn: findInverseExchangeRate,
 		},
 		{
 			name:   "cross",
 			desc:   "кросс-курс через USD для валют без прямого или обратного курса",
+			amount: 10.0,
 			rateFn: findUSDCrossExchangeRate,
 		},
 	}
@@ -59,7 +67,7 @@ func getExchangeSuccess(t *testing.T) {
 				urlParams := url.Values{
 					"from":   {reqExchangeRate.BaseCurrency.Code},
 					"to":     {reqExchangeRate.TargetCurrency.Code},
-					"amount": {strconv.FormatFloat(amount, 'f', 2, 64)},
+					"amount": {strconv.FormatFloat(tc.amount, 'f', 2, 64)},
 				}
 				path += "?" + urlParams.Encode()
 			}
@@ -202,7 +210,7 @@ func getExchangeSuccess(t *testing.T) {
 				if exchangeRateErr != nil {
 					t.Skip(exchangeRateErr)
 				}
-				if err := isValidRounding(respExchange.ConvertedAmount, amount*respExchange.Rate, 2); err != nil {
+				if err := isValidRounding(respExchange.ConvertedAmount, tc.amount*respExchange.Rate, 2); err != nil {
 					t.Error(err)
 				}
 			})
