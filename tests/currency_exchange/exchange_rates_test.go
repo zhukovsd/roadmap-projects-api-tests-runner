@@ -3,6 +3,7 @@ package currencyexchange_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -820,15 +821,35 @@ func postExchangeRatesBadRequest(t *testing.T) {
 }
 
 func postExchangeRatesNotFound(t *testing.T) {
-	c, err := findUsedCurrency()
-	if err != nil {
-		err = fmt.Errorf("Не удалось найти валюту существующую в API: %w", err)
+	var err error
+
+	used, e := findUsedCurrency()
+	if e != nil {
+		err = errors.Join(err, fmt.Errorf("Не удалось найти валюту существующую в API: %w", e))
 	}
-	existing := "{code}"
+	unused, e := findUnusedCurrency()
+	if e != nil {
+		err = errors.Join(err, fmt.Errorf("Не удалось найти валюту отсутствующую в API: %w", e))
+	}
+
+	differentUnused, e := findUnusedCurrency()
+	for differentUnused.Code == unused.Code && e == nil {
+		differentUnused, e = findUnusedCurrency()
+	}
+	if e != nil {
+		err = errors.Join(err, fmt.Errorf("Не удалось найти вторую валюту отсутствующую в API: %w", e))
+	}
+
+	existing := "{existingCode}"
+	missing := "{missingCode}"
+	differentMissing := "{missingCode}"
+
 	if err == nil {
-		existing = c.Code
+		existing = used.Code
+		missing = unused.Code
+		differentMissing = differentUnused.Code
 	}
-	missing := findOrGenerateUnusedCurrency().Code
+
 	rate := "0.50"
 
 	type testCase struct {
@@ -840,7 +861,7 @@ func postExchangeRatesNotFound(t *testing.T) {
 	testCases := []testCase{
 		{
 			name: "unknown base currency code",
-			desc: "код базовой валюты не существует в системе",
+			desc: "код базовой валюты корректный, но не существует в системе",
 			form: url.Values{"baseCurrencyCode": {missing}, "targetCurrencyCode": {existing}, "rate": {rate}},
 		},
 		{
@@ -851,7 +872,7 @@ func postExchangeRatesNotFound(t *testing.T) {
 		{
 			name: "unknown base and target currency code",
 			desc: "код базовой и целевой валюты не существует в системе",
-			form: url.Values{"baseCurrencyCode": {missing}, "targetCurrencyCode": {generateRandomCurrency().Code}, "rate": {rate}},
+			form: url.Values{"baseCurrencyCode": {missing}, "targetCurrencyCode": {differentMissing}, "rate": {rate}},
 		},
 	}
 

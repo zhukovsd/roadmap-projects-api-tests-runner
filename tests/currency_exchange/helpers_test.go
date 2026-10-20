@@ -118,21 +118,22 @@ func (c *checker) assert(name string, desc string, fn func(t *testing.T)) {
 	})
 }
 
-func findOrGenerateUnusedCurrency() Currency {
-	for _, test := range testCurrencies {
-		used := false
-		for _, avail := range apiCurrencies {
-			if avail.Code == test.Code {
-				used = true
-				break
-			}
-		}
-		if !used {
-			return test
-		}
+func findUnusedCurrency() (Currency, error) {
+	validCurrencies := make(map[string]Currency)
+	for _, c := range testCurrencies {
+		validCurrencies[c.Code] = c
 	}
-
-	return generateRandomCurrency()
+	for _, c := range apiCurrencies {
+		delete(validCurrencies, c.Code)
+	}
+	if len(validCurrencies) == 0 {
+		return Currency{}, fmt.Errorf("no unused currency found")
+	}
+	candidates := make([]Currency, 0)
+	for _, c := range validCurrencies {
+		candidates = append(candidates, c)
+	}
+	return candidates[rand.Intn(len(candidates))], nil
 }
 
 func generateRandomCurrency() Currency {
@@ -161,6 +162,14 @@ uniqueCurrencies:
 	}
 
 	return currency
+}
+
+func findOrGenerateUnusedCurrency() Currency {
+	c, err := findUnusedCurrency()
+	if err != nil {
+		return generateRandomCurrency()
+	}
+	return c
 }
 
 func findUsedCurrency() (Currency, error) {
