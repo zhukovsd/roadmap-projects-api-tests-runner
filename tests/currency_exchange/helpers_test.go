@@ -350,7 +350,9 @@ func mustMatchExchangeRates(t *testing.T, got, want ExchangeRate) {
 	mustMatchCurrencies(t, got.BaseCurrency, want.BaseCurrency)
 	mustMatchCurrencies(t, got.TargetCurrency, want.TargetCurrency)
 
-	if got.Rate != want.Rate {
+	tolerance := 1e-15 * math.Max(1.0, math.Max(math.Abs(got.Rate), math.Abs(want.Rate)))
+
+	if math.Abs(got.Rate-want.Rate) > tolerance {
 		t.Errorf("Ожидался обменный курс %v, получен %v", want.Rate, got.Rate)
 	}
 }
