@@ -5,10 +5,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
 
+	"github.com/zhukovsd/roadmap-projects-api-test-runner/internal/logger"
 	"github.com/zhukovsd/roadmap-projects-api-test-runner/tests"
 	"gotest.tools/gotestsum/testjson"
 )
@@ -28,10 +30,40 @@ type progressHandler struct {
 	mu       sync.Mutex
 }
 
-var (
-	totalCacheMu sync.Mutex
-	totalCache   = make(map[string]int)
-)
+func init() {
+	projects := []TestRunProjectName{ProjectNameCurrencyExchange}
+
+	for _, project := range projects {
+		suite, err := newTestSuite(project, "")
+		if err != nil {
+			logger.Error(err.Error())
+			os.Exit(1)
+		}
+		testResults, err := suite.run(context.Background(), runOpts{IsDryRun: true})
+		if err != nil {
+			logger.Error(err.Error())
+			os.Exit(1)
+		}
+
+		actual := len(testResults)
+		expected := suite.progressHandler.progress.Total
+
+		if expected != actual {
+			testNames := make([]string, actual)
+			for i, t := range testResults {
+				testNames[i] = t.Name
+			}
+			logger.Error(
+				"Number of total asserts don't match",
+				"project", project,
+				"expected", expected,
+				"actual", actual,
+				"testNames", testNames,
+			)
+			os.Exit(1)
+		}
+	}
+}
 
 func newTestSuite(project TestRunProjectName, deployBaseURL string) (*Suite, error) {
 	progressHandler := &progressHandler{}
@@ -44,21 +76,24 @@ func newTestSuite(project TestRunProjectName, deployBaseURL string) (*Suite, err
 	case ProjectNameCurrencyExchange:
 		suite.pkgName = "currency_exchange"
 		suite.testBin = "currencyexchange.test"
+		progressHandler.progress.Total = currencyExchangeTotal
 	default:
 		return nil, fmt.Errorf("unknown project name %q: %w", project, ErrInvalidField)
 	}
-
-	total, err := suite.total(context.Background())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get total tests: %w", err)
-	}
-	progressHandler.progress.Total = total
 
 	return suite, nil
 }
 
 func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
-	stdout, wait, err := s.runTestBin(ctx, runOpts{IsDryRun: false})
+	return s.run(ctx, runOpts{IsDryRun: false})
+}
+
+func (s *Suite) Progress(ctx context.Context) Progress {
+	return s.progressHandler.progress
+}
+
+func (s *Suite) run(ctx context.Context, runOpts runOpts) ([]TestResult, error) {
+	stdout, wait, err := s.runTestBin(ctx, runOpts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to run test binary: %w", err)
 	}
@@ -99,45 +134,7 @@ func (s *Suite) Run(ctx context.Context) ([]TestResult, error) {
 	appendResults(pkg.Skipped, ResultStatusSkipped)
 
 	return results, nil
-}
 
-func (s *Suite) Progress(ctx context.Context) Progress {
-	return s.progressHandler.progress
-}
-
-func (s *Suite) total(ctx context.Context) (int, error) {
-	totalCacheMu.Lock()
-	if total, ok := totalCache[s.testBin]; ok {
-		totalCacheMu.Unlock()
-		return total, nil
-	}
-	totalCacheMu.Unlock()
-
-	stdout, wait, err := s.runTestBin(ctx, runOpts{IsDryRun: true})
-	if err != nil {
-		return 0, fmt.Errorf("failed to run test binary: %w", err)
-	}
-	exe, err := testjson.ScanTestOutput(testjson.ScanConfig{Stdout: stdout})
-	if err != nil {
-		return 0, fmt.Errorf("failed to scan test output: %w", err)
-	}
-
-	if err := wait(); err != nil {
-		return 0, fmt.Errorf("test binary failed: %w", err)
-	}
-
-	total := 0
-	for _, tc := range exe.Skipped() {
-		if tc.Attributes[tests.TestDescriptionAttr] != "" {
-			total++
-		}
-	}
-
-	totalCacheMu.Lock()
-	totalCache[s.testBin] = total
-	totalCacheMu.Unlock()
-
-	return total, nil
 }
 
 func (s *Suite) runTestBin(ctx context.Context, opts runOpts) (io.ReadCloser, func() error, error) {
