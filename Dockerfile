@@ -11,6 +11,7 @@ COPY . .
 # static binary
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
+RUN go generate ./...
 RUN go build -o bin/test-runner ./cmd
 RUN go test -o bin/currencyexchange.test -c ./tests/currency_exchange
 

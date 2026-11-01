@@ -12,6 +12,7 @@ import (
 
 const Addr = ":8080"
 
+//go:generate go run ../total_counter.go
 func main() {
 	connPool, err := database.ConnectionPool()
 	if err != nil {
