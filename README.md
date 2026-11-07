@@ -34,7 +34,7 @@ just get ${id из POST респонса}
 
 `just post` и `just get` берут `REST_API_KEY` из окружения
 
-Примеры запросов в [`justfile`][justfile]
+Примеры запросов в `justfile`
 
 ## REST API
 
